@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getUsers } from "@/services/userService";
 import { User } from "@/types/user";
+import { SortDirection, SortField } from "@/types/sort";
 import TableSkeleton from "@/components/ui/Skeleton/TableSkeleton";
 import Pagination from "@/components/ui/Pagination/Pagination";
 import Table from "@/components/ui/Table/Table";
@@ -17,6 +18,8 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   const filteredUsers = users.filter((user) => {
     const term = search.toLowerCase();
@@ -28,13 +31,24 @@ export default function UsersPage() {
     );
   })
 
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    const valA = a[sortField];
+    const valB = b[sortField];
+
+    if (valA < valB) {
+      return sortDirection === "asc" ? -1 : 1;
+    }
+
+    if (valA > valB) {
+      return sortDirection === "asc" ? 1 : -1;
+    }
+
+    return 0;
+  })
+
   const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
   const startIndex = (currentPage - 1) * USERS_PER_PAGE;
-  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + USERS_PER_PAGE);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search])
+  const paginatedUsers = sortedUsers.slice(startIndex, startIndex + USERS_PER_PAGE);
 
   async function loadUsers() {
     try {
@@ -52,6 +66,22 @@ export default function UsersPage() {
       setLoading(false);
     }
   }
+
+  function handleSort(field: SortField) {
+    if (field === sortField) {
+      setSortDirection(prev =>
+        prev === "asc" ? "desc" : "asc"
+      );
+      return;
+    }
+
+    setSortField(field);
+    setSortDirection("asc");
+  }
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search])
   
   useEffect(() => {
     loadUsers();
@@ -91,7 +121,12 @@ export default function UsersPage() {
           <EmptyState title="No users found" description="Try another search term"/>
         ) : (
           <>
-            <Table users={paginatedUsers}/>
+            <Table
+              users={paginatedUsers}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              onSort={handleSort}
+            />
 
             <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage}/>
           </>

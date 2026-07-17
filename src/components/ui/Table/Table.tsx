@@ -1,19 +1,46 @@
 import { User } from "@/types/user";
+import { SortDirection, SortField } from "@/types/sort";
+import SortableHeader from "../SortableHeader/SortableHeader";
 
 type TableProps = {
   users: User[];
+  sortField: SortField;
+  sortDirection: SortDirection;
+  onSort: (field: SortField) => void;
 };
 
-export default function Table({ users }: TableProps) {
+export default function Table({ users, sortField, sortDirection, onSort }: TableProps) {
   return (
     <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
       <table className="w-full border-collapse">
         <thead className="bg-gray-100">
           <tr>
             <th className="px-6 py-3 text-left">ID</th>
-            <th className="px-6 py-3 text-left">Name</th>
-            <th className="px-6 py-3 text-left">Email</th>
-            <th className="px-6 py-3 text-left">Role</th>
+            
+            <SortableHeader 
+              label="Name"
+              field="name"
+              activeField={sortField}
+              direction={sortDirection}
+              onSort={onSort}
+            />
+
+            <SortableHeader 
+              label="Email"
+              field="email"
+              activeField={sortField}
+              direction={sortDirection}
+              onSort={onSort}
+            />
+
+            <SortableHeader 
+              label="Role"
+              field="role"
+              activeField={sortField}
+              direction={sortDirection}
+              onSort={onSort}
+            />
+            
           </tr>
         </thead>
 
