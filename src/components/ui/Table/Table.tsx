@@ -1,23 +1,33 @@
 import { User } from "@/types/user";
 import { SortDirection, SortField } from "@/types/sort";
-import SortableHeader from "../SortableHeader/SortableHeader";
+import SortableHeader from "@/components/ui/SortableHeader/SortableHeader";
+import { Pencil, Trash2 } from "lucide-react";
 
 type TableProps = {
   users: User[];
   sortField: SortField;
   sortDirection: SortDirection;
   onSort: (field: SortField) => void;
+  onEdit: (user: User) => void;
+  onDelete: (user: User) => void;
 };
 
-export default function Table({ users, sortField, sortDirection, onSort }: TableProps) {
+export default function Table({
+  users,
+  sortField,
+  sortDirection,
+  onSort,
+  onEdit,
+  onDelete,
+}: TableProps) {
   return (
     <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
       <table className="w-full border-collapse">
         <thead className="bg-gray-100">
           <tr>
             <th className="px-6 py-3 text-left">ID</th>
-            
-            <SortableHeader 
+
+            <SortableHeader
               label="Name"
               field="name"
               activeField={sortField}
@@ -25,7 +35,7 @@ export default function Table({ users, sortField, sortDirection, onSort }: Table
               onSort={onSort}
             />
 
-            <SortableHeader 
+            <SortableHeader
               label="Email"
               field="email"
               activeField={sortField}
@@ -33,14 +43,18 @@ export default function Table({ users, sortField, sortDirection, onSort }: Table
               onSort={onSort}
             />
 
-            <SortableHeader 
+            <SortableHeader
               label="Role"
               field="role"
               activeField={sortField}
               direction={sortDirection}
               onSort={onSort}
             />
-            
+
+            {/* New column */}
+            <th className="px-6 py-3 text-left">
+              Actions
+            </th>
           </tr>
         </thead>
 
@@ -51,13 +65,41 @@ export default function Table({ users, sortField, sortDirection, onSort }: Table
               className="border-t hover:bg-gray-50"
             >
               <td className="px-6 py-4">{user.id}</td>
-              <td className="px-6 py-4">{user.name}</td>
-              <td className="px-6 py-4">{user.email}</td>
+
+              <td className="px-6 py-4">
+                {user.name}
+              </td>
+
+              <td className="px-6 py-4">
+                {user.email}
+              </td>
+
               <td className="px-6 py-4">
                 <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
-                {user.role}
+                  {user.role}
                 </span>
-                </td>
+              </td>
+
+              {/* New column */}
+              <td className="px-6 py-4">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => onEdit(user)}
+                    className="rounded-md p-2 transition hover:bg-gray-100"
+                    aria-label="Edit user"
+                  >
+                    <Pencil size={18} />
+                  </button>
+
+                  <button
+                    onClick={() => onDelete(user)}
+                    className="rounded-md p-2 transition hover:bg-red-100 hover:text-red-600"
+                    aria-label="Delete user"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>
