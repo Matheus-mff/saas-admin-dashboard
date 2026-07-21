@@ -30,7 +30,15 @@ export default function UsersPage() {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success")
 
-  const { users, setUsers, loading, error, retry } = useUsers();
+  const {
+    users,
+    loading,
+    error,
+    retry,
+    addUser,
+    editUser,
+    removeUser,
+  } = useUsers();
 
   const filteredUsers = users.filter((user) => {
     const term = search.toLowerCase();
@@ -175,39 +183,35 @@ export default function UsersPage() {
             setSelectedUser(undefined);
             setIsModalOpen(false);
           }}
-          onSubmit={(user) => {
-            if (selectedUser) {
-              setUsers((previousUsers) =>
-                previousUsers.map((currentUser) =>
-                  currentUser.id === selectedUser.id
-                    ? {
-                      ...currentUser,
-                      ...user,
-                    }
-                    : currentUser
-                )
+          onSubmit={async (user) => {
+            try {
+              if (selectedUser) {
+                await editUser(
+                  selectedUser.id,
+                  user
+                );
+
+                setToastType("success");
+                setToastMessage(
+                  "User updated successfully."
+                );
+              } else {
+                await addUser(user);
+
+                setToastType("success");
+                setToastMessage(
+                  "User created successfully."
+                );
+              }
+
+              setSelectedUser(undefined);
+              setIsModalOpen(false);
+            } catch {
+              setToastType("error");
+              setToastMessage(
+                "Something went wrong."
               );
-
-              setToastType("success");
-              setToastMessage("User updated successfully.");
-
-            } else {
-              const newUser = {
-                id: Date.now(),
-                ...user,
-              };
-
-              setUsers((previousUsers) => [
-                newUser,
-                ...previousUsers,
-              ]);
-
-              setToastType("success");
-              setToastMessage("User created successfully.");
             }
-
-            setSelectedUser(undefined);
-            setIsModalOpen(false);
           }}
         />
       </Modal>
@@ -216,19 +220,29 @@ export default function UsersPage() {
         open={!!userToDelete}
         title="Delete User"
         message={`Are you sure you want to delete "${userToDelete?.name}"?`}
-        onCancel={() => setUserToDelete(undefined)}
-        onConfirm={() => {
+        onCancel={() =>
+          setUserToDelete(undefined)
+        }
+        onConfirm={async () => {
           if (!userToDelete) return;
 
-          setUsers((previousUsers) =>
-            previousUsers.filter(
-              (currentUser) => currentUser.id !== userToDelete.id
-            )
-          );
+          try {
+            await removeUser(
+              userToDelete.id
+            );
 
-          setToastType("success");
-          setToastMessage("User deleted successfully.");
-          setUserToDelete(undefined);
+            setToastType("success");
+            setToastMessage(
+              "User deleted successfully."
+            );
+
+            setUserToDelete(undefined);
+          } catch {
+            setToastType("error");
+            setToastMessage(
+              "Unable to delete user."
+            );
+          }
         }}
       />
 

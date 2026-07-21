@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 
-import { getUsers } from "@/services/userService";
+import {
+  createUser,
+  deleteUser,
+  getUsers,
+  updateUser,
+} from "@/services/userService";
+
 import { User } from "@/types/user";
+
+type UserInput = Omit<User, "id">;
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -16,14 +24,55 @@ export function useUsers() {
       const data = await getUsers();
 
       setUsers(data);
-
-      } catch {
-        setError("Unable to load users.");
-
-      } finally {
-        setLoading(false);
-      }
+    } catch {
+      setError("Unable to load users.");
+    } finally {
+      setLoading(false);
     }
+  }
+
+  async function addUser(
+    user: UserInput
+  ) {
+    const newUser = await createUser(user);
+
+    setUsers((previousUsers) => [
+      newUser,
+      ...previousUsers,
+    ]);
+
+    return newUser;
+  }
+
+  async function editUser(
+    id: number,
+    user: UserInput
+  ) {
+    const updatedUser = await updateUser(
+      id,
+      user
+    );
+
+    setUsers((previousUsers) =>
+      previousUsers.map((currentUser) =>
+        currentUser.id === id
+          ? updatedUser
+          : currentUser
+      )
+    );
+
+    return updatedUser;
+  }
+
+  async function removeUser(id: number) {
+    await deleteUser(id);
+
+    setUsers((previousUsers) =>
+      previousUsers.filter(
+        (user) => user.id !== id
+      )
+    );
+  }
 
   useEffect(() => {
     loadUsers();
@@ -31,9 +80,11 @@ export function useUsers() {
 
   return {
     users,
-    setUsers,
     loading,
     error,
     retry: loadUsers,
-  }
+    addUser,
+    editUser,
+    removeUser,
+  };
 }
