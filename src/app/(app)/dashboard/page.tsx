@@ -1,6 +1,45 @@
+"use client";
+
+import OrderStatusChart from "@/components/charts/OrderStatusChart/OrderStatusChart";
+import UserRoleChart from "@/components/charts/UserRoleChart/UserRoleChart";
+import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton/DashboardSkeleton";
+import RecentOrders from "@/components/dashboard/RecentOrders/RecentOrders";
 import StatCard from "@/components/dashboard/StatCard/StatCard";
+import ErrorState from "@/components/ui/ErrorState/ErrorState";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 
 export default function DashboardPage() {
+  const {
+    data,
+    loading,
+    error,
+    retry,
+  } = useDashboardStats();
+
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        message={error}
+        onRetry={retry}
+      />
+    );
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const {
+    stats,
+    usersByRole,
+    ordersByStatus,
+    recentOrders,
+  } = data;
+
   return (
     <div>
       <h1 className="text-3xl font-bold">
@@ -11,11 +50,42 @@ export default function DashboardPage() {
         Here's what's happening today.
       </p>
 
-      <div className="grid grid-cols-4 gap-6 mt-8">
-        <StatCard title="Users" value="1,245" />
-        <StatCard title="Orders" value="328" />
-        <StatCard title="Revenue" value="$42,350" />
-        <StatCard title="Products" value="84" />
+      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Users"
+          value={stats.totalUsers}
+        />
+
+        <StatCard
+          title="Orders"
+          value={stats.totalOrders}
+        />
+
+        <StatCard
+          title="Revenue"
+          value={`$${stats.totalRevenue.toLocaleString()}`}
+        />
+
+        <StatCard
+          title="Products"
+          value={stats.totalProducts}
+        />
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <UserRoleChart
+          data={usersByRole}
+        />
+
+        <OrderStatusChart
+          data={ordersByStatus}
+        />
+      </div>
+
+      <div className="mt-8">
+        <RecentOrders
+          orders={recentOrders}
+        />
       </div>
     </div>
   );
