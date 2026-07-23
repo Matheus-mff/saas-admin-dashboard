@@ -1,16 +1,36 @@
-import { Bell, LogOut } from "lucide-react";
+import { Bell, LogOut, Menu } from "lucide-react";
 import { logout } from "@/app/(app)/actions";
+import ThemeToggle from "@/components/ui/ThemeToggle/ThemeToggle";
 
-export default function Header() {
+type HeaderProps = {
+  onMenuClick: () => void;
+};
+
+export default function Header({
+  onMenuClick,
+}: HeaderProps) {
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-white px-8">
-      <div>
-        <p className="text-sm text-gray-500">Admin Dashboard</p>
+    <header className="navigation-surface flex h-16 items-center justify-between border-b px-4 sm:px-6 lg:px-8">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onMenuClick}
+          className="icon-button md:hidden"
+          aria-label="Open navigation"
+        >
+          <Menu size={22} />
+        </button>
+
+        <p className="text-sm muted-text">
+          Admin Dashboard
+        </p>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
+
+        <ThemeToggle />
+
         <button
-          className="rounded-lg p-2 transition hover:bg-gray-100"
+          className="icon-button"
           aria-label="Notifications"
         >
           <Bell size={20} />
@@ -22,20 +42,25 @@ export default function Header() {
           </div>
 
           <div className="hidden sm:block">
-            <p className="text-sm font-medium">Matheus</p>
-            <p className="text-xs text-gray-500">Administrator</p>
-          </div>
+            <p className="text-sm font-medium">
+              Matheus
+            </p>
 
-          <form action={logout}>
-            <button
-              type="submit"
-              className="rounded-lg p-2 transition hover:bg-gray-100"
-              aria-label="Logout"
-            >
-              <LogOut size={20} />
-            </button>
-          </form>
+            <p className="text-xs muted-text">
+              Administrator
+            </p>
+          </div>
         </div>
+
+        <form action={logout}>
+          <button
+            type="submit"
+            className="icon-button"
+            aria-label="Logout"
+          >
+            <LogOut size={20} />
+          </button>
+        </form>
       </div>
     </header>
   );

@@ -109,9 +109,7 @@ export default function ProductForm({
               }));
             }
           }}
-          className={`w-full rounded-lg border px-3 py-2 ${errors.name
-              ? "border-red-500"
-              : ""
+          className={`form-control ${errors.name ? "form-control-error" : ""
             }`}
         />
 
@@ -142,9 +140,7 @@ export default function ProductForm({
               }));
             }
           }}
-          className={`w-full rounded-lg border px-3 py-2 ${errors.price
-              ? "border-red-500"
-              : ""
+          className={`form-control ${errors.price ? "form-control-error" : ""
             }`}
         />
 
@@ -174,9 +170,7 @@ export default function ProductForm({
               }));
             }
           }}
-          className={`w-full rounded-lg border px-3 py-2 ${errors.stock
-              ? "border-red-500"
-              : ""
+          className={`form-control ${errors.stock ? "form-control-error" : ""
             }`}
         />
 
@@ -191,14 +185,14 @@ export default function ProductForm({
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border px-4 py-2"
+          className="secondary-button"
         >
           Cancel
         </button>
 
         <button
           type="submit"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+          className="primary-button"
         >
           Save Product
         </button>

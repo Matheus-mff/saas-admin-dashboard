@@ -20,10 +20,10 @@ export default function SettingsForm({ onSave }: SettingsFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      <section className="rounded-xl border bg-white p-6 shadow-sm">
+      <section className="card p-6">
         <h2 className="text-lg font-semibold">Profile</h2>
 
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm muted-text">
           Update your personal information.
         </p>
 
@@ -35,7 +35,7 @@ export default function SettingsForm({ onSave }: SettingsFormProps) {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2"
+              className="form-control"
             />
           </div>
 
@@ -46,16 +46,16 @@ export default function SettingsForm({ onSave }: SettingsFormProps) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2"
+              className="form-control"
             />
           </div>
         </div>
       </section>
 
-      <section className="rounded-xl border bg-white p-6 shadow-sm">
+      <section className="card p-6">
         <h2 className="text-lg font-semibold">Workspace</h2>
 
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm muted-text">
           Manage your workspace information.
         </p>
 
@@ -66,15 +66,15 @@ export default function SettingsForm({ onSave }: SettingsFormProps) {
             type="text"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
-            className="w-full rounded-lg border px-3 py-2"
+            className="form-control"
           />
         </div>
       </section>
 
-      <section className="rounded-xl border bg-white p-6 shadow-sm">
+      <section className="card p-6">
         <h2 className="text-lg font-semibold">Notifications</h2>
 
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm muted-text">
           Choose how you receive updates.
         </p>
 
@@ -82,7 +82,7 @@ export default function SettingsForm({ onSave }: SettingsFormProps) {
           <div>
             <p className="font-medium">Email notifications</p>
 
-            <p className="text-sm text-gray-500">
+            <p className="mt-1 text-sm muted-text">
               Receive important account and activity updates.
             </p>
           </div>
@@ -91,7 +91,7 @@ export default function SettingsForm({ onSave }: SettingsFormProps) {
             type="checkbox"
             checked={emailNotifications}
             onChange={(e) => setEmailNotifications(e.target.checked)}
-            className="h-5 w-5"
+            className="form-control"
           />
         </label>
       </section>
@@ -99,7 +99,7 @@ export default function SettingsForm({ onSave }: SettingsFormProps) {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="rounded-lg bg-blue-600 px-5 py-2 text-white transition hover:bg-blue-700"
+          className="primary-button"
         >
           Save Changes
         </button>

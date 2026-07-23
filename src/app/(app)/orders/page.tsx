@@ -71,7 +71,7 @@ export default function OrdersPage() {
         Orders
       </h1>
 
-      <p className="mt-2 text-gray-500">
+      <p className="mt-2 muted-text">
         View and manage customer orders.
       </p>
 
@@ -88,11 +88,10 @@ export default function OrdersPage() {
               onClick={() =>
                 setStatusFilter(status)
               }
-              className={`rounded-lg px-4 py-2 ${
-                statusFilter === status
+              className={`rounded-lg px-4 py-2 ${statusFilter === status
                   ? "bg-blue-600 text-white"
-                  : "border"
-              }`}
+                  : "secondary-button"
+                }`}
             >
               {status}
             </button>
@@ -106,7 +105,7 @@ export default function OrdersPage() {
           onChange={(e) =>
             setSearch(e.target.value)
           }
-          className="w-full rounded-lg border px-4 py-2"
+          className="form-control"
         />
       </div>
 

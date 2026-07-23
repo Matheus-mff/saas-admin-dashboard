@@ -8,14 +8,14 @@ export default function EmptyState({
   description,
 }: EmptyStateProps) {
   return (
-    <div className="rounded-xl border bg-white p-12 text-center shadow-sm">
+    <div className="card p-12 text-center">
       <div className="text-5xl">📭</div>
 
       <h2 className="mt-6 text-2xl font-semibold">
         {title}
       </h2>
 
-      <p className="mt-3 text-gray-500">
+      <p className="mt-3 muted-text">
         {description}
       </p>
     </div>

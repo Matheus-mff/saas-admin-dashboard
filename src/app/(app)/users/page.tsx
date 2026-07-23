@@ -86,7 +86,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search])
+  }, [search, roleFilter])
 
   useEffect(() => {
     if (!toastMessage) return;
@@ -114,7 +114,7 @@ export default function UsersPage() {
         Users
       </h1>
 
-      <p className="mt-2 text-gray-500">
+      <p className="mt-2 muted-text">
         Manage all users in your application.
       </p>
 
@@ -127,12 +127,14 @@ export default function UsersPage() {
 
       <div className="mt-8">
 
-        <div className="mb-6 flex gap-2">
+        <div className="mb-6 flex flex-wrap gap-2">
           {["All", "Admin", "Manager", "User"].map((role) => (
             <button
               key={role}
               onClick={() => setRoleFilter(role)}
-              className={`rounded-lg px-4 py-2 ${roleFilter === role ? "bg-blue-600 text-white" : "border"
+              className={`rounded-lg px-4 py-2 ${roleFilter === role
+                ? "bg-blue-600 text-white"
+                : "secondary-button"
                 }`}
             >
               {role}
@@ -146,7 +148,7 @@ export default function UsersPage() {
           placeholder="Search users..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="mt-8 w-full rounded-lg border px-4 py-2"
+          className="form-control mt-8"
         />
 
         {filteredUsers.length === 0 ? (

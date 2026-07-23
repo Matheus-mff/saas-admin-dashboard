@@ -17,10 +17,10 @@ export default function ProductTable({
   onDelete,
 }: ProductTableProps) {
   return (
-    <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+    <div className="table-container">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-100">
+          <thead className="table-header">
             <tr>
               <th className="px-6 py-3 text-left">
                 ID
@@ -48,7 +48,7 @@ export default function ProductTable({
             {products.map((product) => (
               <tr
                 key={product.id}
-                className="border-t hover:bg-gray-50"
+                className="table-row"
               >
                 <td className="px-6 py-4">
                   {product.id}
@@ -72,7 +72,7 @@ export default function ProductTable({
                       onClick={() =>
                         onEdit(product)
                       }
-                      className="rounded-md p-2 transition hover:bg-gray-100"
+                      className="icon-button"
                       aria-label="Edit product"
                     >
                       <Pencil size={18} />
@@ -82,7 +82,7 @@ export default function ProductTable({
                       onClick={() =>
                         onDelete(product)
                       }
-                      className="rounded-md p-2 transition hover:bg-red-100 hover:text-red-600"
+                      className="icon-button danger-icon-button"
                       aria-label="Delete product"
                     >
                       <Trash2 size={18} />

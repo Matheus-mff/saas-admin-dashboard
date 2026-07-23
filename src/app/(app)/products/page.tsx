@@ -57,13 +57,13 @@ export default function ProductsPage() {
 
   return (
     <div>
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">
             Products
           </h1>
 
-          <p className="mt-2 text-gray-500">
+          <p className="mt-2 muted-text">
             Manage the products available in your application.
           </p>
         </div>
@@ -83,7 +83,7 @@ export default function ProductsPage() {
         placeholder="Search products..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="mt-8 w-full rounded-lg border px-4 py-2"
+        className="form-control mt-8"
       />
 
       <div className="mt-6">

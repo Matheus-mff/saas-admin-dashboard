@@ -28,12 +28,12 @@ export default function UserRoleChart({
   }));
 
   return (
-    <div className="rounded-xl border bg-white p-6 shadow-sm">
+    <div className="card p-6">
       <h2 className="text-lg font-semibold">
         Users by Role
       </h2>
 
-      <p className="mt-1 text-sm text-gray-500">
+      <p className="mt-1 text-sm muted-text">
         Distribution of users by permission level.
       </p>
 

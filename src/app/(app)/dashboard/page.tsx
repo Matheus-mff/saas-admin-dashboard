@@ -46,7 +46,7 @@ export default function DashboardPage() {
         Welcome back, Matheus 👋
       </h1>
 
-      <p className="mt-2 text-gray-500">
+      <p className="mt-2 muted-text">
         Here's what's happening today.
       </p>
 

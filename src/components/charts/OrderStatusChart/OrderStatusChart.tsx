@@ -19,12 +19,12 @@ export default function OrderStatusChart({
   data,
 }: OrderStatusChartProps) {
   return (
-    <div className="rounded-xl border bg-white p-6 shadow-sm">
+    <div className="card p-6">
       <h2 className="text-lg font-semibold">
         Orders by Status
       </h2>
 
-      <p className="mt-1 text-sm text-gray-500">
+      <p className="mt-1 text-sm muted-text">
         Current distribution of all orders.
       </p>
 

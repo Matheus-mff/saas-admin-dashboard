@@ -22,7 +22,7 @@ export default function SettingsPage() {
     <div>
       <h1 className="text-3xl font-bold">Settings</h1>
 
-      <p className="mt-2 text-gray-500">
+      <p className="mt-2 muted-text">
         Manage your account and workspace preferences.
       </p>
 

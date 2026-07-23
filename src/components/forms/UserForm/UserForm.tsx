@@ -95,9 +95,8 @@ export default function UserForm({
               }));
             }
           }}
-          className={`w-full rounded-lg border px-3 py-2 ${
-            errors.name ? "border-red-500" : ""
-          }`}
+          className={`form-control ${errors.name ? "form-control-error" : ""
+            }`}
         />
 
         {errors.name && (
@@ -126,9 +125,8 @@ export default function UserForm({
               }));
             }
           }}
-          className={`w-full rounded-lg border px-3 py-2 ${
-            errors.email ? "border-red-500" : ""
-          }`}
+          className={`form-control ${errors.email ? "form-control-error" : ""
+            }`}
         />
 
         {errors.email && (
@@ -156,9 +154,8 @@ export default function UserForm({
               }));
             }
           }}
-          className={`w-full rounded-lg border px-3 py-2 ${
-            errors.role ? "border-red-500" : ""
-          }`}
+          className={`form-control ${errors.role ? "form-control-error" : ""
+            }`}
         >
           <option value="" disabled>
             Select a role
@@ -180,14 +177,14 @@ export default function UserForm({
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border px-4 py-2"
+          className="secondary-button"
         >
           Cancel
         </button>
 
         <button
           type="submit"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 transition-colors"
+          className="primary-button"
         >
           Save User
         </button>

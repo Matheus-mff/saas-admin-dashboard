@@ -1,26 +1,263 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* =========================
+   THEME VARIABLES
+========================= */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f9fafb;
+  --foreground: #111827;
+
+  --surface: #ffffff;
+  --surface-secondary: #f3f4f6;
+
+  --border: #e5e7eb;
+
+  --muted: #6b7280;
+
+  --hover: #f9fafb;
+
+  --input-background: #ffffff;
+
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+
+  --success: #16a34a;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --background: #030712;
+  --foreground: #f3f4f6;
+
+  --surface: #111827;
+  --surface-secondary: #1f2937;
+
+  --border: #374151;
+
+  --muted: #9ca3af;
+
+  --hover: #1f2937;
+
+  --input-background: #1f2937;
+
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+
+  --success: #16a34a;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* =========================
+   BASE
+========================= */
+
+* {
+  border-color: var(--border);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* =========================
+   REUSABLE SURFACES
+========================= */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow:
+    0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.modal-panel {
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.app-surface {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.navigation-surface {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+/* =========================
+   TEXT
+========================= */
+
+.muted-text {
+  color: var(--muted);
+}
+
+/* =========================
+   FORM CONTROLS
+========================= */
+
+.form-control {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--input-background);
+  color: var(--foreground);
+  padding: 0.5rem 0.75rem;
+}
+
+.form-control::placeholder {
+  color: var(--muted);
+}
+
+.form-control:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.form-control-error {
+  border-color: #ef4444;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.primary-button {
+  border-radius: 0.5rem;
+  background: var(--primary);
+  color: white;
+  padding: 0.5rem 1rem;
+  transition: background 150ms;
+}
+
+.primary-button:hover {
+  background: var(--primary-hover);
+}
+
+.primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.secondary-button {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--foreground);
+  padding: 0.5rem 1rem;
+  transition: background 150ms;
+}
+
+.secondary-button:hover {
+  background: var(--hover);
+}
+
+.icon-button {
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  transition:
+    background 150ms,
+    color 150ms;
+}
+
+.icon-button:hover {
+  background: var(--hover);
+}
+
+.danger-icon-button:hover {
+  background: rgb(254 226 226);
+  color: var(--danger);
+}
+
+.dark .danger-icon-button:hover {
+  background: rgb(127 29 29 / 0.3);
+}
+
+/* =========================
+   TABLES
+========================= */
+
+.table-container {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  box-shadow:
+    0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.table-header {
+  background: var(--surface-secondary);
+}
+
+.table-row {
+  border-top: 1px solid var(--border);
+  transition: background 150ms;
+}
+
+.table-row:hover {
+  background: var(--hover);
+}
+
+/* =========================
+   STATUS BADGES
+========================= */
+
+.status-badge {
+  display: inline-block;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-completed {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-processing {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.dark .status-completed {
+  background: rgb(20 83 45 / 0.5);
+  color: #86efac;
+}
+
+.dark .status-processing {
+  background: rgb(30 64 175 / 0.4);
+  color: #93c5fd;
+}
+
+.dark .status-pending {
+  background: rgb(146 64 14 / 0.4);
+  color: #fcd34d;
+}
+
+/* =========================
+   OVERLAYS
+========================= */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.5);
 }

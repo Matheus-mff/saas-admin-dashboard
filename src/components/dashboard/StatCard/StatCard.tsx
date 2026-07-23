@@ -8,8 +8,8 @@ export default function StatCard({
   value,
 }: StatCardProps) {
   return (
-    <div className="rounded-xl border bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-      <p className="text-sm text-gray-500">
+    <div className="card p-6 transition-shadow hover:shadow-md">
+      <p className="muted-text text-sm">
         {title}
       </p>
 

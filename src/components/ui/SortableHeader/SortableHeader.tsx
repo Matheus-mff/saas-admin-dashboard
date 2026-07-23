@@ -19,7 +19,7 @@ export default function SortableHeader({
   return (
     <th
       onClick={() => onSort(field)}
-      className="cursor-pointer select-none px-6 py-3 text-left transition-colors hover:bg-gray-100"
+      className="cursor-pointer select-none px-6 py-3 text-left transition-colors hover:bg-[var(--hover)]"
     >
       {label}
 

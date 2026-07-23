@@ -21,9 +21,9 @@ export default function Table({
   onDelete,
 }: TableProps) {
   return (
-    <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+    <div className="table-container">
       <table className="w-full border-collapse">
-        <thead className="bg-gray-100">
+        <thead className="table-header">
           <tr>
             <th className="px-6 py-3 text-left">ID</th>
 
@@ -62,7 +62,7 @@ export default function Table({
           {users.map((user) => (
             <tr
               key={user.id}
-              className="border-t hover:bg-gray-50"
+              className="table-row"
             >
               <td className="px-6 py-4">{user.id}</td>
 
@@ -85,7 +85,7 @@ export default function Table({
                 <div className="flex gap-2">
                   <button
                     onClick={() => onEdit(user)}
-                    className="rounded-md p-2 transition hover:bg-gray-100"
+                    className="icon-button"
                     aria-label="Edit user"
                   >
                     <Pencil size={18} />
@@ -93,7 +93,7 @@ export default function Table({
 
                   <button
                     onClick={() => onDelete(user)}
-                    className="rounded-md p-2 transition hover:bg-red-100 hover:text-red-600"
+                    className="icon-button danger-icon-button"
                     aria-label="Delete user"
                   >
                     <Trash2 size={18} />

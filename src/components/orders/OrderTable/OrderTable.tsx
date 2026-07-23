@@ -12,10 +12,10 @@ export default function OrderTable({
   onView,
 }: OrderTableProps) {
   return (
-    <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+    <div className="table-container">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-100">
+          <thead className="table-header">
             <tr>
               <th className="px-6 py-3 text-left">
                 Order
@@ -43,7 +43,7 @@ export default function OrderTable({
             {orders.map((order) => (
               <tr
                 key={order.id}
-                className="border-t hover:bg-gray-50"
+                className="table-row"
               >
                 <td className="px-6 py-4">
                   #{order.id}
@@ -58,7 +58,14 @@ export default function OrderTable({
                 </td>
 
                 <td className="px-6 py-4">
-                  <span className="rounded-full bg-gray-100 px-3 py-1 text-sm">
+                  <span
+                    className={`status-badge ${order.status === "Completed"
+                        ? "status-completed"
+                        : order.status === "Processing"
+                          ? "status-processing"
+                          : "status-pending"
+                      }`}
+                  >
                     {order.status}
                   </span>
                 </td>
@@ -66,7 +73,7 @@ export default function OrderTable({
                 <td className="px-6 py-4">
                   <button
                     onClick={() => onView(order)}
-                    className="rounded-md p-2 transition hover:bg-gray-100"
+                    className="icon-button"
                     aria-label="View order"
                   >
                     <Eye size={18} />

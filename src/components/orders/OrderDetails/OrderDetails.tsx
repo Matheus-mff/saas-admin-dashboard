@@ -13,7 +13,7 @@ export default function OrderDetails({
     <div>
       <div className="space-y-4">
         <div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm muted-text">
             Order ID
           </p>
 
@@ -23,7 +23,7 @@ export default function OrderDetails({
         </div>
 
         <div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm muted-text">
             Customer
           </p>
 
@@ -33,7 +33,7 @@ export default function OrderDetails({
         </div>
 
         <div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm muted-text">
             Total
           </p>
 
@@ -43,7 +43,7 @@ export default function OrderDetails({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-gray-500">
+          <label className="mb-1 block text-sm muted-text">
             Status
           </label>
 
@@ -54,7 +54,7 @@ export default function OrderDetails({
                 e.target.value as Order["status"]
               )
             }
-            className="w-full rounded-lg border px-3 py-2"
+            className="form-control"
           >
             <option value="Pending">
               Pending

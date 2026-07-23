@@ -17,13 +17,13 @@ export default function LoginForm() {
   return (
     <form
       action={formAction}
-      className="w-full max-w-md rounded-xl border bg-white p-8 shadow-sm"
+      className="card w-full max-w-md p-8"
     >
       <h1 className="text-3xl font-bold">
         Welcome back
       </h1>
 
-      <p className="mt-2 text-gray-500">
+      <p className="mt-2 muted-text">
         Sign in to access your dashboard.
       </p>
 
@@ -36,7 +36,7 @@ export default function LoginForm() {
           type="email"
           name="email"
           placeholder="admin@email.com"
-          className="w-full rounded-lg border px-3 py-2"
+          className="form-control"
         />
       </div>
 
@@ -49,7 +49,7 @@ export default function LoginForm() {
           type="password"
           name="password"
           placeholder="Enter your password"
-          className="w-full rounded-lg border px-3 py-2"
+          className="form-control"
         />
       </div>
 
@@ -62,14 +62,14 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="mt-6 w-full rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="primary-button mt-6 w-full"
       >
         {isPending
           ? "Signing in..."
           : "Sign In"}
       </button>
 
-      <div className="mt-6 rounded-lg bg-gray-50 p-4 text-sm text-gray-500">
+      <div className="mt-6 rounded-lg bg-[var(--surface-secondary)] p-4 text-sm muted-text">
         <p>
           Demo credentials:
         </p>
