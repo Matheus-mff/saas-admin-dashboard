@@ -31,11 +31,8 @@ export function useProducts() {
     }
   }
 
-  async function addProduct(
-    product: ProductInput
-  ) {
-    const newProduct =
-      await createProduct(product);
+  async function addProduct(product: ProductInput) {
+    const newProduct = await createProduct(product);
 
     setProducts((previousProducts) => [
       newProduct,
@@ -47,8 +44,10 @@ export function useProducts() {
     id: number,
     product: ProductInput
   ) {
-    const updatedProduct =
-      await updateProduct(id, product);
+    const updatedProduct = await updateProduct(
+      id,
+      product
+    );
 
     setProducts((previousProducts) =>
       previousProducts.map((currentProduct) =>
@@ -70,7 +69,28 @@ export function useProducts() {
   }
 
   useEffect(() => {
-    loadProducts();
+    let cancelled = false;
+
+    getProducts()
+      .then((data) => {
+        if (cancelled) return;
+
+        setProducts(data);
+      })
+      .catch(() => {
+        if (cancelled) return;
+
+        setError("Unable to load products.");
+      })
+      .finally(() => {
+        if (cancelled) return;
+
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return {

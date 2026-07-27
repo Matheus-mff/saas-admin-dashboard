@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import ProductForm from "@/components/forms/ProductForm/ProductForm";
 import ProductTable from "@/components/products/ProductTable/ProductTable";
@@ -13,6 +13,8 @@ import TableSkeleton from "@/components/ui/Skeleton/TableSkeleton";
 import Toast from "@/components/ui/Toast/Toast";
 
 import { useProducts } from "@/hooks/useProducts";
+import { useToast } from "@/hooks/useToast";
+
 import { Product } from "@/types/product";
 
 export default function ProductsPage() {
@@ -20,8 +22,8 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
   const [productToDelete, setProductToDelete] = useState<Product | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState<"success" | "error">("success");
+
+  const { toastMessage, toastType, showToast } = useToast();
 
   const {
     products,
@@ -37,22 +39,17 @@ export default function ProductsPage() {
     product.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  useEffect(() => {
-    if (!toastMessage) return;
-
-    const timeout = setTimeout(() => {
-      setToastMessage("");
-    }, 3000);
-
-    return () => clearTimeout(timeout);
-  }, [toastMessage]);
-
   if (loading) {
     return <TableSkeleton />;
   }
 
   if (error) {
-    return <ErrorState message={error} onRetry={retry} />;
+    return (
+      <ErrorState
+        message={error}
+        onRetry={retry}
+      />
+    );
   }
 
   return (
@@ -125,19 +122,17 @@ export default function ProductsPage() {
               if (selectedProduct) {
                 await editProduct(selectedProduct.id, product);
 
-                setToastMessage("Product updated successfully.");
+                showToast("Product updated successfully.");
               } else {
                 await addProduct(product);
 
-                setToastMessage("Product created successfully.");
+                showToast("Product created successfully.");
               }
 
-              setToastType("success");
               setSelectedProduct(undefined);
               setIsModalOpen(false);
             } catch {
-              setToastType("error");
-              setToastMessage("Something went wrong.");
+              showToast("Something went wrong.", "error");
             }
           }}
         />
@@ -154,12 +149,10 @@ export default function ProductsPage() {
           try {
             await removeProduct(productToDelete.id);
 
-            setToastType("success");
-            setToastMessage("Product deleted successfully.");
+            showToast("Product deleted successfully.");
             setProductToDelete(undefined);
           } catch {
-            setToastType("error");
-            setToastMessage("Unable to delete product.");
+            showToast("Unable to delete product.", "error");
           }
         }}
       />

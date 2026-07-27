@@ -31,7 +31,10 @@ export function useOrders() {
     id: number,
     status: Order["status"]
   ) {
-    const updatedOrder = await updateOrderStatus(id, status);
+    const updatedOrder = await updateOrderStatus(
+      id,
+      status
+    );
 
     setOrders((previousOrders) =>
       previousOrders.map((order) =>
@@ -43,7 +46,28 @@ export function useOrders() {
   }
 
   useEffect(() => {
-    loadOrders();
+    let cancelled = false;
+
+    getOrders()
+      .then((data) => {
+        if (cancelled) return;
+
+        setOrders(data);
+      })
+      .catch(() => {
+        if (cancelled) return;
+
+        setError("Unable to load orders.");
+      })
+      .finally(() => {
+        if (cancelled) return;
+
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return {

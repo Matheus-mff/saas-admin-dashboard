@@ -1,26 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import SettingsForm from "@/components/forms/SettingsForm/SettingsForm";
 import Toast from "@/components/ui/Toast/Toast";
 
+import { useToast } from "@/hooks/useToast";
+
 export default function SettingsPage() {
-  const [toastMessage, setToastMessage] = useState("");
-
-  useEffect(() => {
-    if (!toastMessage) return;
-
-    const timeout = setTimeout(() => {
-      setToastMessage("");
-    }, 3000);
-
-    return () => clearTimeout(timeout);
-  }, [toastMessage]);
+  const { toastMessage, toastType, showToast } = useToast();
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Settings</h1>
+      <h1 className="text-3xl font-bold">
+        Settings
+      </h1>
 
       <p className="mt-2 muted-text">
         Manage your account and workspace preferences.
@@ -29,7 +21,7 @@ export default function SettingsPage() {
       <div className="mt-8">
         <SettingsForm
           onSave={() => {
-            setToastMessage("Settings saved successfully.");
+            showToast("Settings saved successfully.");
           }}
         />
       </div>
@@ -37,7 +29,7 @@ export default function SettingsPage() {
       {toastMessage && (
         <Toast
           message={toastMessage}
-          type="success"
+          type={toastType}
         />
       )}
     </div>

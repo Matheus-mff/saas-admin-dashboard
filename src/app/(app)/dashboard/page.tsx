@@ -47,7 +47,7 @@ export default function DashboardPage() {
       </h1>
 
       <p className="mt-2 muted-text">
-        Here's what's happening today.
+        {"Here's what's happening today."}
       </p>
 
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">

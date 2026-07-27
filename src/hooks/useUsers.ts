@@ -31,9 +31,7 @@ export function useUsers() {
     }
   }
 
-  async function addUser(
-    user: UserInput
-  ) {
+  async function addUser(user: UserInput) {
     const newUser = await createUser(user);
 
     setUsers((previousUsers) => [
@@ -48,10 +46,7 @@ export function useUsers() {
     id: number,
     user: UserInput
   ) {
-    const updatedUser = await updateUser(
-      id,
-      user
-    );
+    const updatedUser = await updateUser(id, user);
 
     setUsers((previousUsers) =>
       previousUsers.map((currentUser) =>
@@ -68,14 +63,33 @@ export function useUsers() {
     await deleteUser(id);
 
     setUsers((previousUsers) =>
-      previousUsers.filter(
-        (user) => user.id !== id
-      )
+      previousUsers.filter((user) => user.id !== id)
     );
   }
 
   useEffect(() => {
-    loadUsers();
+    let cancelled = false;
+
+    getUsers()
+      .then((data) => {
+        if (cancelled) return;
+
+        setUsers(data);
+      })
+      .catch(() => {
+        if (cancelled) return;
+
+        setError("Unable to load users.");
+      })
+      .finally(() => {
+        if (cancelled) return;
+
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return {

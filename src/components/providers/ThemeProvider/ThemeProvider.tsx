@@ -1,19 +1,28 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 type ThemeContextValue = {
   isDark: boolean;
   toggleTheme: () => void;
 };
 
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+const ThemeContext = createContext<ThemeContextValue | undefined>(
+  undefined
+);
 
 type ThemeProviderProps = {
   children: React.ReactNode;
 };
 
-export default function ThemeProvider({ children }: ThemeProviderProps) {
+export default function ThemeProvider({
+  children,
+}: ThemeProviderProps) {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -27,28 +36,32 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
       savedTheme === "dark" ||
       (!savedTheme && prefersDark);
 
-    setIsDark(shouldUseDark);
-
     document.documentElement.classList.toggle(
       "dark",
       shouldUseDark
     );
+
+    queueMicrotask(() => {
+      setIsDark(shouldUseDark);
+    });
   }, []);
 
   function toggleTheme() {
-    const newIsDark = !isDark;
+    setIsDark((previousIsDark) => {
+      const newIsDark = !previousIsDark;
 
-    setIsDark(newIsDark);
+      document.documentElement.classList.toggle(
+        "dark",
+        newIsDark
+      );
 
-    document.documentElement.classList.toggle(
-      "dark",
-      newIsDark
-    );
+      localStorage.setItem(
+        "theme",
+        newIsDark ? "dark" : "light"
+      );
 
-    localStorage.setItem(
-      "theme",
-      newIsDark ? "dark" : "light"
-    );
+      return newIsDark;
+    });
   }
 
   return (

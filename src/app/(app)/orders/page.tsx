@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import OrderDetails from "@/components/orders/OrderDetails/OrderDetails";
 import OrderTable from "@/components/orders/OrderTable/OrderTable";
@@ -11,14 +11,16 @@ import TableSkeleton from "@/components/ui/Skeleton/TableSkeleton";
 import Toast from "@/components/ui/Toast/Toast";
 
 import { useOrders } from "@/hooks/useOrders";
+import { useToast } from "@/hooks/useToast";
+
 import { Order } from "@/types/order";
 
 export default function OrdersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedOrder, setSelectedOrder] = useState<Order | undefined>();
-  const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState<"success" | "error">("success");
+
+  const { toastMessage, toastType, showToast } = useToast();
 
   const {
     orders,
@@ -41,16 +43,6 @@ export default function OrdersPage() {
 
     return matchesSearch && matchesStatus;
   });
-
-  useEffect(() => {
-    if (!toastMessage) return;
-
-    const timeout = setTimeout(() => {
-      setToastMessage("");
-    }, 3000);
-
-    return () => clearTimeout(timeout);
-  }, [toastMessage]);
 
   if (loading) {
     return <TableSkeleton />;
@@ -85,13 +77,12 @@ export default function OrdersPage() {
           ].map((status) => (
             <button
               key={status}
-              onClick={() =>
-                setStatusFilter(status)
-              }
-              className={`rounded-lg px-4 py-2 ${statusFilter === status
+              onClick={() => setStatusFilter(status)}
+              className={`rounded-lg px-4 py-2 ${
+                statusFilter === status
                   ? "bg-blue-600 text-white"
                   : "secondary-button"
-                }`}
+              }`}
             >
               {status}
             </button>
@@ -102,9 +93,7 @@ export default function OrdersPage() {
           type="text"
           placeholder="Search by customer or order ID..."
           value={search}
-          onChange={(e) =>
-            setSearch(e.target.value)
-          }
+          onChange={(e) => setSearch(e.target.value)}
           className="form-control"
         />
       </div>
@@ -128,35 +117,27 @@ export default function OrdersPage() {
       <Modal
         open={!!selectedOrder}
         title="Order Details"
-        onClose={() =>
-          setSelectedOrder(undefined)
-        }
+        onClose={() => setSelectedOrder(undefined)}
       >
         {selectedOrder && (
           <OrderDetails
             order={selectedOrder}
             onStatusChange={async (status) => {
               try {
-                const updatedOrder =
-                  await changeOrderStatus(
-                    selectedOrder.id,
-                    status
-                  );
-
-                setSelectedOrder(
-                  updatedOrder
+                const updatedOrder = await changeOrderStatus(
+                  selectedOrder.id,
+                  status
                 );
 
-                setToastType("success");
+                setSelectedOrder(updatedOrder);
 
-                setToastMessage(
+                showToast(
                   "Order status updated successfully."
                 );
               } catch {
-                setToastType("error");
-
-                setToastMessage(
-                  "Unable to update order status."
+                showToast(
+                  "Unable to update order status.",
+                  "error"
                 );
               }
             }}
