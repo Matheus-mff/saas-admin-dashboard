@@ -3,107 +3,175 @@
 import { useState } from "react";
 
 type SettingsFormProps = {
-  onSave: () => void;
+  onSave: () => void | Promise<void>;
 };
 
-export default function SettingsForm({ onSave }: SettingsFormProps) {
+export default function SettingsForm({
+  onSave,
+}: SettingsFormProps) {
   const [name, setName] = useState("Matheus");
-  const [email, setEmail] = useState("matheus@email.com");
-  const [company, setCompany] = useState("Acme SaaS");
-  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [email, setEmail] = useState(
+    "matheus@email.com"
+  );
+  const [company, setCompany] = useState(
+    "Acme SaaS"
+  );
+  const [
+    emailNotifications,
+    setEmailNotifications,
+  ] = useState(true);
 
-  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+  const [isSaving, setIsSaving] =
+    useState(false);
+
+  async function handleSubmit(
+    e: React.SubmitEvent<HTMLFormElement>
+  ) {
     e.preventDefault();
 
-    onSave();
+    if (isSaving) return;
+
+    setIsSaving(true);
+
+    try {
+      await onSave();
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      <section className="card p-6">
-        <h2 className="text-lg font-semibold">Profile</h2>
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-8"
+    >
+      <fieldset
+        disabled={isSaving}
+        className="contents"
+      >
+        <section className="card p-6">
+          <h2 className="text-lg font-semibold">
+            Profile
+          </h2>
 
-        <p className="mt-1 text-sm muted-text">
-          Update your personal information.
-        </p>
+          <p className="mt-1 text-sm muted-text">
+            Update your personal information.
+          </p>
 
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
-          <div>
-            <label className="mb-1 block font-medium">Name</label>
+          <div className="mt-6 grid gap-6 md:grid-cols-2">
+            <div>
+              <label
+                htmlFor="settings-name"
+                className="mb-1 block font-medium"
+              >
+                Name
+              </label>
+
+              <input
+                id="settings-name"
+                type="text"
+                value={name}
+                onChange={(e) =>
+                  setName(e.target.value)
+                }
+                className="form-control"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="settings-email"
+                className="mb-1 block font-medium"
+              >
+                Email
+              </label>
+
+              <input
+                id="settings-email"
+                type="email"
+                value={email}
+                onChange={(e) =>
+                  setEmail(e.target.value)
+                }
+                className="form-control"
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className="card p-6">
+          <h2 className="text-lg font-semibold">
+            Workspace
+          </h2>
+
+          <p className="mt-1 text-sm muted-text">
+            Manage your workspace information.
+          </p>
+
+          <div className="mt-6">
+            <label
+              htmlFor="settings-company"
+              className="mb-1 block font-medium"
+            >
+              Company name
+            </label>
 
             <input
+              id="settings-company"
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={company}
+              onChange={(e) =>
+                setCompany(e.target.value)
+              }
               className="form-control"
             />
           </div>
+        </section>
 
-          <div>
-            <label className="mb-1 block font-medium">Email</label>
+        <section className="card p-6">
+          <h2 className="text-lg font-semibold">
+            Notifications
+          </h2>
+
+          <p className="mt-1 text-sm muted-text">
+            Choose how you receive updates.
+          </p>
+
+          <label className="mt-6 flex items-center justify-between gap-4">
+            <div>
+              <p className="font-medium">
+                Email notifications
+              </p>
+
+              <p className="mt-1 text-sm muted-text">
+                Receive important account and
+                activity updates.
+              </p>
+            </div>
 
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-control"
+              type="checkbox"
+              checked={emailNotifications}
+              onChange={(e) =>
+                setEmailNotifications(
+                  e.target.checked
+                )
+              }
             />
-          </div>
+          </label>
+        </section>
+
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="primary-button"
+          >
+            {isSaving
+              ? "Saving..."
+              : "Save Changes"}
+          </button>
         </div>
-      </section>
-
-      <section className="card p-6">
-        <h2 className="text-lg font-semibold">Workspace</h2>
-
-        <p className="mt-1 text-sm muted-text">
-          Manage your workspace information.
-        </p>
-
-        <div className="mt-6">
-          <label className="mb-1 block font-medium">Company name</label>
-
-          <input
-            type="text"
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            className="form-control"
-          />
-        </div>
-      </section>
-
-      <section className="card p-6">
-        <h2 className="text-lg font-semibold">Notifications</h2>
-
-        <p className="mt-1 text-sm muted-text">
-          Choose how you receive updates.
-        </p>
-
-        <label className="mt-6 flex items-center justify-between gap-4">
-          <div>
-            <p className="font-medium">Email notifications</p>
-
-            <p className="mt-1 text-sm muted-text">
-              Receive important account and activity updates.
-            </p>
-          </div>
-
-          <input
-            type="checkbox"
-            checked={emailNotifications}
-            onChange={(e) => setEmailNotifications(e.target.checked)}
-            className="form-control"
-          />
-        </label>
-      </section>
-
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          className="primary-button"
-        >
-          Save Changes
-        </button>
-      </div>
+      </fieldset>
     </form>
   );
 }

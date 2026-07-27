@@ -10,6 +10,11 @@ import Modal from "@/components/ui/Modal/Modal";
 import TableSkeleton from "@/components/ui/Skeleton/TableSkeleton";
 import Toast from "@/components/ui/Toast/Toast";
 
+import {
+  ORDER_STATUS_FILTERS,
+  OrderStatusFilter,
+} from "@/constants/orderStatuses";
+
 import { useOrders } from "@/hooks/useOrders";
 import { useToast } from "@/hooks/useToast";
 
@@ -17,10 +22,16 @@ import { Order } from "@/types/order";
 
 export default function OrdersPage() {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [selectedOrder, setSelectedOrder] = useState<Order | undefined>();
+  const [statusFilter, setStatusFilter] =
+    useState<OrderStatusFilter>("All");
+  const [selectedOrder, setSelectedOrder] =
+    useState<Order | undefined>();
 
-  const { toastMessage, toastType, showToast } = useToast();
+  const {
+    toastMessage,
+    toastType,
+    showToast,
+  } = useToast();
 
   const {
     orders,
@@ -30,12 +41,18 @@ export default function OrdersPage() {
     changeOrderStatus,
   } = useOrders();
 
-  const filteredOrders = orders.filter((order) => {
-    const term = search.toLowerCase();
+  const normalizedSearch = search
+    .trim()
+    .toLowerCase();
 
+  const filteredOrders = orders.filter((order) => {
     const matchesSearch =
-      order.customer.toLowerCase().includes(term) ||
-      order.id.toString().includes(term);
+      order.customer
+        .toLowerCase()
+        .includes(normalizedSearch) ||
+      order.id
+        .toString()
+        .includes(normalizedSearch);
 
     const matchesStatus =
       statusFilter === "All" ||
@@ -69,20 +86,18 @@ export default function OrdersPage() {
 
       <div className="mt-8 flex flex-col gap-4">
         <div className="flex flex-wrap gap-2">
-          {[
-            "All",
-            "Pending",
-            "Processing",
-            "Completed",
-          ].map((status) => (
+          {ORDER_STATUS_FILTERS.map((status) => (
             <button
               key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`rounded-lg px-4 py-2 ${
+              type="button"
+              onClick={() =>
+                setStatusFilter(status)
+              }
+              className={
                 statusFilter === status
-                  ? "bg-blue-600 text-white"
+                  ? "primary-button"
                   : "secondary-button"
-              }`}
+              }
             >
               {status}
             </button>
@@ -90,10 +105,12 @@ export default function OrdersPage() {
         </div>
 
         <input
-          type="text"
+          type="search"
           placeholder="Search by customer or order ID..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) =>
+            setSearch(e.target.value)
+          }
           className="form-control"
         />
       </div>
@@ -117,28 +134,33 @@ export default function OrdersPage() {
       <Modal
         open={!!selectedOrder}
         title="Order Details"
-        onClose={() => setSelectedOrder(undefined)}
+        onClose={() =>
+          setSelectedOrder(undefined)
+        }
       >
         {selectedOrder && (
           <OrderDetails
             order={selectedOrder}
             onStatusChange={async (status) => {
               try {
-                const updatedOrder = await changeOrderStatus(
-                  selectedOrder.id,
-                  status
-                );
+                const updatedOrder =
+                  await changeOrderStatus(
+                    selectedOrder.id,
+                    status
+                  );
 
                 setSelectedOrder(updatedOrder);
 
                 showToast(
                   "Order status updated successfully."
                 );
-              } catch {
-                showToast(
-                  "Unable to update order status.",
-                  "error"
-                );
+              } catch (error) {
+                const message =
+                  error instanceof Error
+                    ? error.message
+                    : "Unable to update order status.";
+
+                showToast(message, "error");
               }
             }}
           />

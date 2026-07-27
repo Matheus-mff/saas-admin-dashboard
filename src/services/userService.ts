@@ -1,65 +1,88 @@
-import { users as initialUsers } from "@/data/users";
-import { User } from "@/types/user";
-import { delay } from "@/utils/delay";
-
-type UserInput = Omit<User, "id">;
-
-// This acts as our temporary in-memory database.
-let usersDatabase: User[] = [...initialUsers];
+import { User, UserInput } from "@/types/user";
+import { getApiErrorMessage } from "@/utils/getApiErrorMessage";
 
 export async function getUsers(): Promise<User[]> {
-  await delay(700);
+  const response = await fetch("/api/users", {
+    method: "GET",
+    cache: "no-store",
+  });
 
-  const shouldFail = Math.random() < 0.1;
+  if (!response.ok) {
+    const message = await getApiErrorMessage(
+      response,
+      "Unable to load users."
+    );
 
-  if (shouldFail) {
-    throw new Error("Unable to load users.");
+    throw new Error(message);
   }
 
-  return [...usersDatabase];
+  return response.json();
 }
 
-export async function createUser(user: UserInput): Promise<User> {
-  await delay(700);
+export async function createUser(
+  user: UserInput
+): Promise<User> {
+  const response = await fetch("/api/users", {
+    method: "POST",
 
-  const newUser: User = {
-    id: Date.now(),
-    ...user,
-  };
+    headers: {
+      "Content-Type": "application/json",
+    },
 
-  usersDatabase = [newUser, ...usersDatabase];
+    body: JSON.stringify(user),
+  });
 
-  return newUser;
+  if (!response.ok) {
+    const message = await getApiErrorMessage(
+      response,
+      "Unable to create user."
+    );
+
+    throw new Error(message);
+  }
+
+  return response.json();
 }
 
 export async function updateUser(
   id: number,
   user: UserInput
 ): Promise<User> {
-  await delay(700);
+  const response = await fetch(`/api/users/${id}`, {
+    method: "PATCH",
 
-  const existingUser = usersDatabase.find(
-    (currentUser) => currentUser.id === id
-  );
+    headers: {
+      "Content-Type": "application/json",
+    },
 
-  if (!existingUser) {
-    throw new Error("User not found.");
+    body: JSON.stringify(user),
+  });
+
+  if (!response.ok) {
+    const message = await getApiErrorMessage(
+      response,
+      "Unable to update user."
+    );
+
+    throw new Error(message);
   }
 
-  const updatedUser: User = {
-    ...existingUser,
-    ...user,
-  };
-
-  usersDatabase = usersDatabase.map((currentUser) =>
-    currentUser.id === id ? updatedUser : currentUser
-  );
-
-  return updatedUser;
+  return response.json();
 }
 
-export async function deleteUser(id: number): Promise<void> {
-  await delay(700);
+export async function deleteUser(
+  id: number
+): Promise<void> {
+  const response = await fetch(`/api/users/${id}`, {
+    method: "DELETE",
+  });
 
-  usersDatabase = usersDatabase.filter((user) => user.id !== id);
+  if (!response.ok) {
+    const message = await getApiErrorMessage(
+      response,
+      "Unable to delete user."
+    );
+
+    throw new Error(message);
+  }
 }

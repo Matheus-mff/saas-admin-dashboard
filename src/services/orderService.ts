@@ -1,35 +1,48 @@
-import { orders as initialOrders } from "@/data/orders";
 import { Order } from "@/types/order";
-import { delay } from "@/utils/delay";
-
-let ordersDatabase: Order[] = [...initialOrders];
+import { getApiErrorMessage } from "@/utils/getApiErrorMessage";
 
 export async function getOrders(): Promise<Order[]> {
-  await delay(700);
+  const response = await fetch("/api/orders", {
+    method: "GET",
+    cache: "no-store",
+  });
 
-  return [...ordersDatabase];
+  if (!response.ok) {
+    const message = await getApiErrorMessage(
+      response,
+      "Unable to load orders."
+    );
+
+    throw new Error(message);
+  }
+
+  return response.json();
 }
 
 export async function updateOrderStatus(
   id: number,
   status: Order["status"]
 ): Promise<Order> {
-  await delay(700);
+  const response = await fetch(`/api/orders/${id}`, {
+    method: "PATCH",
 
-  const existingOrder = ordersDatabase.find((order) => order.id === id);
+    headers: {
+      "Content-Type": "application/json",
+    },
 
-  if (!existingOrder) {
-    throw new Error("Order not found.");
+    body: JSON.stringify({
+      status,
+    }),
+  });
+
+  if (!response.ok) {
+    const message = await getApiErrorMessage(
+      response,
+      "Unable to update order status."
+    );
+
+    throw new Error(message);
   }
 
-  const updatedOrder: Order = {
-    ...existingOrder,
-    status,
-  };
-
-  ordersDatabase = ordersDatabase.map((order) =>
-    order.id === id ? updatedOrder : order
-  );
-
-  return updatedOrder;
+  return response.json();
 }

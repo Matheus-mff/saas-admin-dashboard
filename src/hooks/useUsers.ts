@@ -7,9 +7,7 @@ import {
   updateUser,
 } from "@/services/userService";
 
-import { User } from "@/types/user";
-
-type UserInput = Omit<User, "id">;
+import { User, UserInput } from "@/types/user";
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);

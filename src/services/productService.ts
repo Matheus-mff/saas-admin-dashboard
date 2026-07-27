@@ -1,62 +1,90 @@
-import { products as initialProducts } from "@/data/products";
 import { Product } from "@/types/product";
-import { delay } from "@/utils/delay";
+import { getApiErrorMessage } from "@/utils/getApiErrorMessage";
 
 type ProductInput = Omit<Product, "id">;
 
-let productsDatabase: Product[] = [...initialProducts];
-
 export async function getProducts(): Promise<Product[]> {
-  await delay(700);
+  const response = await fetch("/api/products", {
+    method: "GET",
+    cache: "no-store",
+  });
 
-  return [...productsDatabase];
+  if (!response.ok) {
+    const message = await getApiErrorMessage(
+      response,
+      "Unable to load products."
+    );
+
+    throw new Error(message);
+  }
+
+  return response.json();
 }
 
 export async function createProduct(
   product: ProductInput
 ): Promise<Product> {
-  await delay(700);
+  const response = await fetch("/api/products", {
+    method: "POST",
 
-  const newProduct: Product = {
-    id: Date.now(),
-    ...product,
-  };
+    headers: {
+      "Content-Type": "application/json",
+    },
 
-  productsDatabase = [newProduct, ...productsDatabase];
+    body: JSON.stringify(product),
+  });
 
-  return newProduct;
+  if (!response.ok) {
+    const message = await getApiErrorMessage(
+      response,
+      "Unable to create product."
+    );
+
+    throw new Error(message);
+  }
+
+  return response.json();
 }
 
 export async function updateProduct(
   id: number,
   product: ProductInput
 ): Promise<Product> {
-  await delay(700);
+  const response = await fetch(`/api/products/${id}`, {
+    method: "PATCH",
 
-  const existingProduct = productsDatabase.find(
-    (currentProduct) => currentProduct.id === id
-  );
+    headers: {
+      "Content-Type": "application/json",
+    },
 
-  if (!existingProduct) {
-    throw new Error("Product not found.");
+    body: JSON.stringify(product),
+  });
+
+  if (!response.ok) {
+    const message = await getApiErrorMessage(
+      response,
+      "Unable to update product."
+    );
+
+    throw new Error(message);
   }
 
-  const updatedProduct: Product = {
-    ...existingProduct,
-    ...product,
-  };
-
-  productsDatabase = productsDatabase.map((currentProduct) =>
-    currentProduct.id === id ? updatedProduct : currentProduct
-  );
-
-  return updatedProduct;
+  return response.json();
 }
 
-export async function deleteProduct(id: number): Promise<void> {
-  await delay(700);
+export async function deleteProduct(
+  id: number
+): Promise<void> {
+  const response = await fetch(`/api/products/${id}`, {
+    method: "DELETE",
+  });
 
-  productsDatabase = productsDatabase.filter(
-    (product) => product.id !== id
-  );
+  if (!response.ok) {
+    const message = await getApiErrorMessage(
+      response,
+      "Unable to delete product."
+    );
+
+    throw new Error(message);
+  }
 }

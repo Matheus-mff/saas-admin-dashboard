@@ -131,8 +131,13 @@ export default function ProductsPage() {
 
               setSelectedProduct(undefined);
               setIsModalOpen(false);
-            } catch {
-              showToast("Something went wrong.", "error");
+            } catch (error) {
+              const message =
+                error instanceof Error
+                  ? error.message
+                  : "Something went wrong.";
+
+              showToast(message, "error");
             }
           }}
         />
@@ -151,8 +156,13 @@ export default function ProductsPage() {
 
             showToast("Product deleted successfully.");
             setProductToDelete(undefined);
-          } catch {
-            showToast("Unable to delete product.", "error");
+          } catch (error) {
+            const message =
+              error instanceof Error
+                ? error.message
+                : "Unable to delete product.";
+
+            showToast(message, "error");
           }
         }}
       />

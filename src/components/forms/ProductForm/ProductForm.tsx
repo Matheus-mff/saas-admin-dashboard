@@ -4,15 +4,17 @@ import { useState } from "react";
 
 import { Product } from "@/types/product";
 
+type ProductInput = {
+  name: string;
+  price: number;
+  stock: number;
+};
+
 type ProductFormProps = {
   product?: Product;
-
-  onSubmit: (product: {
-    name: string;
-    price: number;
-    stock: number;
-  }) => void | Promise<void>;
-
+  onSubmit: (
+    product: ProductInput
+  ) => void | Promise<void>;
   onCancel: () => void;
 };
 
@@ -33,6 +35,9 @@ export default function ProductForm({
     product?.stock.toString() ?? ""
   );
 
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+
   const [errors, setErrors] = useState({
     name: "",
     price: "",
@@ -52,16 +57,14 @@ export default function ProductForm({
     }
 
     if (!price) {
-      newErrors.price =
-        "Price is required.";
+      newErrors.price = "Price is required.";
     } else if (Number(price) <= 0) {
       newErrors.price =
         "Price must be greater than zero.";
     }
 
     if (!stock) {
-      newErrors.stock =
-        "Stock is required.";
+      newErrors.stock = "Stock is required.";
     } else if (Number(stock) < 0) {
       newErrors.stock =
         "Stock cannot be negative.";
@@ -81,30 +84,43 @@ export default function ProductForm({
   ) {
     e.preventDefault();
 
+    if (isSubmitting) return;
     if (!validate()) return;
 
-    await onSubmit({
-      name: name.trim(),
-      price: Number(price),
-      stock: Number(stock),
-    });
+    setIsSubmitting(true);
+
+    try {
+      await onSubmit({
+        name: name.trim(),
+        price: Number(price),
+        stock: Number(stock),
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="mb-4">
-        <label className="mb-1 block font-medium">
+        <label
+          htmlFor="product-name"
+          className="mb-1 block font-medium"
+        >
           Name
         </label>
 
         <input
+          id="product-name"
+          type="text"
           value={name}
+          disabled={isSubmitting}
           onChange={(e) => {
             setName(e.target.value);
 
             if (errors.name) {
-              setErrors((previous) => ({
-                ...previous,
+              setErrors((previousErrors) => ({
+                ...previousErrors,
                 name: "",
               }));
             }
@@ -121,21 +137,26 @@ export default function ProductForm({
       </div>
 
       <div className="mb-4">
-        <label className="mb-1 block font-medium">
+        <label
+          htmlFor="product-price"
+          className="mb-1 block font-medium"
+        >
           Price
         </label>
 
         <input
+          id="product-price"
           type="number"
           min="0"
           step="0.01"
           value={price}
+          disabled={isSubmitting}
           onChange={(e) => {
             setPrice(e.target.value);
 
             if (errors.price) {
-              setErrors((previous) => ({
-                ...previous,
+              setErrors((previousErrors) => ({
+                ...previousErrors,
                 price: "",
               }));
             }
@@ -152,20 +173,26 @@ export default function ProductForm({
       </div>
 
       <div className="mb-6">
-        <label className="mb-1 block font-medium">
+        <label
+          htmlFor="product-stock"
+          className="mb-1 block font-medium"
+        >
           Stock
         </label>
 
         <input
+          id="product-stock"
           type="number"
           min="0"
+          step="1"
           value={stock}
+          disabled={isSubmitting}
           onChange={(e) => {
             setStock(e.target.value);
 
             if (errors.stock) {
-              setErrors((previous) => ({
-                ...previous,
+              setErrors((previousErrors) => ({
+                ...previousErrors,
                 stock: "",
               }));
             }
@@ -185,6 +212,7 @@ export default function ProductForm({
         <button
           type="button"
           onClick={onCancel}
+          disabled={isSubmitting}
           className="secondary-button"
         >
           Cancel
@@ -192,9 +220,12 @@ export default function ProductForm({
 
         <button
           type="submit"
+          disabled={isSubmitting}
           className="primary-button"
         >
-          Save Product
+          {isSubmitting
+            ? "Saving..."
+            : "Save Product"}
         </button>
       </div>
     </form>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type ConfirmModalProps = {
   open: boolean;
@@ -17,28 +17,58 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  const [isConfirming, setIsConfirming] =
+    useState(false);
+
   useEffect(() => {
     if (!open) return;
 
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
+      if (
+        e.key === "Escape" &&
+        !isConfirming
+      ) {
         onCancel();
       }
     }
 
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener(
+      "keydown",
+      handleKeyDown
+    );
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown
+      );
     };
-  }, [open, onCancel]);
+  }, [open, isConfirming, onCancel]);
+
+  async function handleConfirm() {
+    if (isConfirming) return;
+
+    setIsConfirming(true);
+
+    try {
+      await onConfirm();
+    } finally {
+      setIsConfirming(false);
+    }
+  }
+
+  function handleCancel() {
+    if (isConfirming) return;
+
+    onCancel();
+  }
 
   if (!open) return null;
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onCancel}
+      onClick={handleCancel}
     >
       <div
         role="alertdialog"
@@ -65,7 +95,8 @@ export default function ConfirmModal({
         <div className="mt-6 flex justify-end gap-2">
           <button
             type="button"
-            onClick={onCancel}
+            onClick={handleCancel}
+            disabled={isConfirming}
             className="secondary-button"
           >
             Cancel
@@ -73,10 +104,13 @@ export default function ConfirmModal({
 
           <button
             type="button"
-            onClick={onConfirm}
-            className="rounded-lg bg-red-600 px-4 py-2 text-white transition hover:bg-red-700"
+            onClick={handleConfirm}
+            disabled={isConfirming}
+            className="rounded-lg bg-red-600 px-4 py-2 text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Delete
+            {isConfirming
+              ? "Deleting..."
+              : "Delete"}
           </button>
         </div>
       </div>

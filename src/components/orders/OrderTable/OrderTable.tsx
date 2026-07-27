@@ -1,6 +1,7 @@
 import { Eye } from "lucide-react";
 
 import { Order } from "@/types/order";
+import { getOrderStatusClass } from "@/utils/getOrderStatusClass";
 
 type OrderTableProps = {
   orders: Order[];
@@ -59,12 +60,9 @@ export default function OrderTable({
 
                 <td className="px-6 py-4">
                   <span
-                    className={`status-badge ${order.status === "Completed"
-                        ? "status-completed"
-                        : order.status === "Processing"
-                          ? "status-processing"
-                          : "status-pending"
-                      }`}
+                    className={`status-badge ${getOrderStatusClass(
+                      order.status
+                    )}`}
                   >
                     {order.status}
                   </span>

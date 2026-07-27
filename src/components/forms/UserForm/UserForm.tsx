@@ -1,17 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { User } from "@/types/user";
+
+import {
+  USER_ROLES,
+  UserRole,
+} from "@/constants/userRoles";
+
+import {
+  User,
+  UserInput,
+} from "@/types/user";
 
 type UserFormProps = {
   user?: User;
-
-  onSubmit: (user: {
-    name: string;
-    email: string;
-    role: string;
-  }) => void;
-
+  onSubmit: (user: UserInput) => void | Promise<void>;
   onCancel: () => void;
 };
 
@@ -22,7 +25,12 @@ export default function UserForm({
 }: UserFormProps) {
   const [name, setName] = useState(user?.name ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
-  const [role, setRole] = useState(user?.role ?? "");
+  const [role, setRole] = useState<UserRole | "">(
+    user?.role ?? ""
+  );
+
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
   const [errors, setErrors] = useState({
     name: "",
@@ -44,7 +52,8 @@ export default function UserForm({
     if (!email.trim()) {
       newErrors.email = "Email is required.";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Please enter a valid email.";
+      newErrors.email =
+        "Please enter a valid email.";
     }
 
     if (!role) {
@@ -60,37 +69,48 @@ export default function UserForm({
     );
   }
 
-  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    e: React.SubmitEvent<HTMLFormElement>
+  ) {
     e.preventDefault();
 
-    if (!validate()) {
-      return;
-    }
+    if (isSubmitting) return;
+    if (!validate() || !role) return;
 
-    onSubmit({
-      name,
-      email,
-      role,
-    });
+    setIsSubmitting(true);
+
+    try {
+      await onSubmit({
+        name: name.trim(),
+        email: email.trim(),
+        role,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <form onSubmit={handleSubmit}>
-      {/* Name */}
       <div className="mb-4">
-        <label className="mb-1 block font-medium">
+        <label
+          htmlFor="user-name"
+          className="mb-1 block font-medium"
+        >
           Name
         </label>
 
         <input
+          id="user-name"
           type="text"
           value={name}
+          disabled={isSubmitting}
           onChange={(e) => {
             setName(e.target.value);
 
             if (errors.name) {
-              setErrors((prev) => ({
-                ...prev,
+              setErrors((previousErrors) => ({
+                ...previousErrors,
                 name: "",
               }));
             }
@@ -106,21 +126,25 @@ export default function UserForm({
         )}
       </div>
 
-      {/* Email */}
       <div className="mb-4">
-        <label className="mb-1 block font-medium">
+        <label
+          htmlFor="user-email"
+          className="mb-1 block font-medium"
+        >
           Email
         </label>
 
         <input
+          id="user-email"
           type="email"
           value={email}
+          disabled={isSubmitting}
           onChange={(e) => {
             setEmail(e.target.value);
 
             if (errors.email) {
-              setErrors((prev) => ({
-                ...prev,
+              setErrors((previousErrors) => ({
+                ...previousErrors,
                 email: "",
               }));
             }
@@ -136,20 +160,24 @@ export default function UserForm({
         )}
       </div>
 
-      {/* Role */}
       <div className="mb-6">
-        <label className="mb-1 block font-medium">
+        <label
+          htmlFor="user-role"
+          className="mb-1 block font-medium"
+        >
           Role
         </label>
 
         <select
+          id="user-role"
           value={role}
+          disabled={isSubmitting}
           onChange={(e) => {
-            setRole(e.target.value);
+            setRole(e.target.value as UserRole);
 
             if (errors.role) {
-              setErrors((prev) => ({
-                ...prev,
+              setErrors((previousErrors) => ({
+                ...previousErrors,
                 role: "",
               }));
             }
@@ -161,9 +189,14 @@ export default function UserForm({
             Select a role
           </option>
 
-          <option value="Admin">Admin</option>
-          <option value="Manager">Manager</option>
-          <option value="User">User</option>
+          {USER_ROLES.map((userRole) => (
+            <option
+              key={userRole}
+              value={userRole}
+            >
+              {userRole}
+            </option>
+          ))}
         </select>
 
         {errors.role && (
@@ -177,6 +210,7 @@ export default function UserForm({
         <button
           type="button"
           onClick={onCancel}
+          disabled={isSubmitting}
           className="secondary-button"
         >
           Cancel
@@ -184,9 +218,12 @@ export default function UserForm({
 
         <button
           type="submit"
+          disabled={isSubmitting}
           className="primary-button"
         >
-          Save User
+          {isSubmitting
+            ? "Saving..."
+            : "Save User"}
         </button>
       </div>
     </form>

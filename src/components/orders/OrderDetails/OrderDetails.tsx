@@ -1,14 +1,43 @@
+"use client";
+
+import { useState } from "react";
+
+import {
+  ORDER_STATUSES,
+  OrderStatus,
+} from "@/constants/orderStatuses";
+
 import { Order } from "@/types/order";
 
 type OrderDetailsProps = {
   order: Order;
-  onStatusChange: (status: Order["status"]) => void;
+  onStatusChange: (
+    status: OrderStatus
+  ) => void | Promise<void>;
 };
 
 export default function OrderDetails({
   order,
   onStatusChange,
 }: OrderDetailsProps) {
+  const [isUpdating, setIsUpdating] =
+    useState(false);
+
+  async function handleStatusChange(
+    status: OrderStatus
+  ) {
+    if (isUpdating) return;
+    if (status === order.status) return;
+
+    setIsUpdating(true);
+
+    try {
+      await onStatusChange(status);
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
   return (
     <div>
       <div className="space-y-4">
@@ -43,31 +72,42 @@ export default function OrderDetails({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm muted-text">
+          <label
+            htmlFor="order-status"
+            className="mb-1 block text-sm muted-text"
+          >
             Status
           </label>
 
           <select
+            id="order-status"
             value={order.status}
+            disabled={isUpdating}
             onChange={(e) =>
-              onStatusChange(
-                e.target.value as Order["status"]
+              handleStatusChange(
+                e.target.value as OrderStatus
               )
             }
             className="form-control"
           >
-            <option value="Pending">
-              Pending
-            </option>
-
-            <option value="Processing">
-              Processing
-            </option>
-
-            <option value="Completed">
-              Completed
-            </option>
+            {ORDER_STATUSES.map((status) => (
+              <option
+                key={status}
+                value={status}
+              >
+                {status}
+              </option>
+            ))}
           </select>
+
+          {isUpdating && (
+            <p
+              className="mt-2 text-sm muted-text"
+              aria-live="polite"
+            >
+              Updating status...
+            </p>
+          )}
         </div>
       </div>
     </div>
