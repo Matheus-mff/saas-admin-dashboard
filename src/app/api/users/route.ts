@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 
-import { USER_ROLES, UserRole } from "@/constants/userRoles";
+import {
+  USER_ROLES,
+  UserRole,
+} from "@/constants/userRoles";
+
+import {
+  requireAdmin,
+  requireAuthenticatedUser,
+} from "@/lib/apiAuth";
+
 import { prisma } from "@/lib/prisma";
 
 type CreateUserBody = {
@@ -12,13 +21,29 @@ type CreateUserBody = {
 function isValidRole(role: unknown): role is UserRole {
   return (
     typeof role === "string" &&
-    USER_ROLES.some((validRole) => validRole === role)
+    USER_ROLES.some(
+      (validRole) => validRole === role
+    )
   );
 }
 
 export async function GET() {
+  const authResult =
+    await requireAuthenticatedUser();
+
+  if (authResult.response) {
+    return authResult.response;
+  }
+
   try {
     const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+
       orderBy: {
         createdAt: "desc",
       },
@@ -40,8 +65,15 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authResult = await requireAdmin();
+
+  if (authResult.response) {
+    return authResult.response;
+  }
+
   try {
-    const body = (await request.json()) as CreateUserBody;
+    const body =
+      (await request.json()) as CreateUserBody;
 
     const name =
       typeof body.name === "string"
@@ -99,16 +131,22 @@ export async function POST(request: Request) {
       );
     }
 
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
+    const existingUser =
+      await prisma.user.findUnique({
+        where: {
+          email,
+        },
+
+        select: {
+          id: true,
+        },
+      });
 
     if (existingUser) {
       return NextResponse.json(
         {
-          message: "A user with this email already exists.",
+          message:
+            "A user with this email already exists.",
         },
         {
           status: 409,
@@ -122,13 +160,23 @@ export async function POST(request: Request) {
         email,
         role,
       },
+
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
     });
 
     return NextResponse.json(newUser, {
       status: 201,
     });
   } catch (error) {
-    console.error("POST /api/users failed:", error);
+    console.error(
+      "POST /api/users failed:",
+      error
+    );
 
     return NextResponse.json(
       {

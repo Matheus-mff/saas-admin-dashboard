@@ -5,6 +5,7 @@ import {
   UserRole,
 } from "@/constants/userRoles";
 
+import { requireAdmin } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 
 type UpdateUserBody = {
@@ -45,6 +46,12 @@ export async function PATCH(
   request: Request,
   { params }: UserRouteContext
 ) {
+  const authResult = await requireAdmin();
+
+  if (authResult.response) {
+    return authResult.response;
+  }
+
   try {
     const { id } = await params;
     const userId = parseUserId(id);
@@ -65,6 +72,11 @@ export async function PATCH(
         where: {
           id: userId,
         },
+
+        select: {
+          id: true,
+          passwordHash: true,
+        },
       });
 
     if (!existingUser) {
@@ -74,6 +86,18 @@ export async function PATCH(
         },
         {
           status: 404,
+        }
+      );
+    }
+
+    if (existingUser.passwordHash) {
+      return NextResponse.json(
+        {
+          message:
+            "Login accounts cannot be edited.",
+        },
+        {
+          status: 403,
         }
       );
     }
@@ -144,6 +168,10 @@ export async function PATCH(
         where: {
           email,
         },
+
+        select: {
+          id: true,
+        },
       });
 
     if (
@@ -172,6 +200,13 @@ export async function PATCH(
           email,
           role,
         },
+
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
       });
 
     return NextResponse.json(updatedUser);
@@ -196,6 +231,12 @@ export async function DELETE(
   _request: Request,
   { params }: UserRouteContext
 ) {
+  const authResult = await requireAdmin();
+
+  if (authResult.response) {
+    return authResult.response;
+  }
+
   try {
     const { id } = await params;
     const userId = parseUserId(id);
@@ -216,6 +257,11 @@ export async function DELETE(
         where: {
           id: userId,
         },
+
+        select: {
+          id: true,
+          passwordHash: true,
+        },
       });
 
     if (!existingUser) {
@@ -225,6 +271,18 @@ export async function DELETE(
         },
         {
           status: 404,
+        }
+      );
+    }
+
+    if (existingUser.passwordHash) {
+      return NextResponse.json(
+        {
+          message:
+            "Login accounts cannot be deleted.",
+        },
+        {
+          status: 403,
         }
       );
     }

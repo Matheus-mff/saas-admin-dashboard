@@ -2,15 +2,27 @@
 
 import { useState } from "react";
 
+import { UserRole } from "@/constants/userRoles";
+
 import Header from "@/components/layout/Header/Header";
 import Sidebar from "@/components/layout/Sidebar/Sidebar";
 
 type AppShellProps = {
   children: React.ReactNode;
+
+  user: {
+    name: string;
+    email: string;
+    role: UserRole;
+  };
 };
 
-export default function AppShell({ children }: AppShellProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+export default function AppShell({
+  children,
+  user,
+}: AppShellProps) {
+  const [isSidebarOpen, setIsSidebarOpen] =
+    useState(false);
 
   return (
     <div className="app-surface min-h-screen">
@@ -21,7 +33,10 @@ export default function AppShell({ children }: AppShellProps) {
 
       <div className="md:ml-64">
         <Header
-          onMenuClick={() => setIsSidebarOpen(true)}
+          user={user}
+          onMenuClick={() =>
+            setIsSidebarOpen(true)
+          }
         />
 
         <main className="p-4 sm:p-6 lg:p-8">

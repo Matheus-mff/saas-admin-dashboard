@@ -5,6 +5,7 @@ import {
   OrderStatus,
 } from "@/constants/orderStatuses";
 
+import { requireAdmin } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 
 type UpdateOrderBody = {
@@ -17,7 +18,9 @@ type OrderRouteContext = {
   }>;
 };
 
-function parseOrderId(id: string): number | null {
+function parseOrderId(
+  id: string
+): number | null {
   const parsedId = Number(id);
 
   if (
@@ -36,7 +39,8 @@ function isValidStatus(
   return (
     typeof status === "string" &&
     ORDER_STATUSES.some(
-      (validStatus) => validStatus === status
+      (validStatus) =>
+        validStatus === status
     )
   );
 }
@@ -45,6 +49,12 @@ export async function PATCH(
   request: Request,
   { params }: OrderRouteContext
 ) {
+  const authResult = await requireAdmin();
+
+  if (authResult.response) {
+    return authResult.response;
+  }
+
   try {
     const { id } = await params;
     const orderId = parseOrderId(id);
@@ -65,6 +75,10 @@ export async function PATCH(
         where: {
           id: orderId,
         },
+
+        select: {
+          id: true,
+        },
       });
 
     if (!existingOrder) {
@@ -84,7 +98,8 @@ export async function PATCH(
     if (!isValidStatus(body.status)) {
       return NextResponse.json(
         {
-          message: "Please select a valid status.",
+          message:
+            "Please select a valid status.",
         },
         {
           status: 400,
@@ -103,7 +118,9 @@ export async function PATCH(
         },
       });
 
-    return NextResponse.json(updatedOrder);
+    return NextResponse.json(
+      updatedOrder
+    );
   } catch (error) {
     console.error(
       "PATCH /api/orders/[id] failed:",
@@ -112,7 +129,8 @@ export async function PATCH(
 
     return NextResponse.json(
       {
-        message: "Unable to update order status.",
+        message:
+          "Unable to update order status.",
       },
       {
         status: 500,

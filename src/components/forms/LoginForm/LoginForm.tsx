@@ -2,60 +2,73 @@
 
 import { useActionState } from "react";
 
-import {
-  login,
-  LoginState,
-} from "@/app/(auth)/login/actions";
-
-const initialState: LoginState = {
-  error: "",
-};
+import { login } from "@/app/(auth)/login/actions";
 
 export default function LoginForm() {
-  const [state, formAction, isPending] = useActionState(login, initialState);
+  const [errorMessage, formAction, isPending] =
+    useActionState(login, undefined);
 
   return (
     <form
       action={formAction}
       className="card w-full max-w-md p-8"
     >
-      <h1 className="text-3xl font-bold">
-        Welcome back
-      </h1>
+      <div>
+        <h1 className="text-2xl font-bold">
+          Welcome back
+        </h1>
 
-      <p className="mt-2 muted-text">
-        Sign in to access your dashboard.
-      </p>
+        <p className="mt-2 muted-text">
+          Sign in to access your dashboard.
+        </p>
+      </div>
 
-      <div className="mt-8">
-        <label className="mb-1 block font-medium">
+      <div className="mt-6">
+        <label
+          htmlFor="login-email"
+          className="mb-1 block font-medium"
+        >
           Email
         </label>
 
         <input
-          type="email"
+          id="login-email"
           name="email"
-          placeholder="admin@email.com"
+          type="email"
+          autoComplete="email"
+          defaultValue="admin@email.com"
+          disabled={isPending}
+          required
           className="form-control"
         />
       </div>
 
       <div className="mt-4">
-        <label className="mb-1 block font-medium">
+        <label
+          htmlFor="login-password"
+          className="mb-1 block font-medium"
+        >
           Password
         </label>
 
         <input
-          type="password"
+          id="login-password"
           name="password"
-          placeholder="Enter your password"
+          type="password"
+          autoComplete="current-password"
+          defaultValue="admin123"
+          disabled={isPending}
+          required
           className="form-control"
         />
       </div>
 
-      {state.error && (
-        <p className="mt-4 text-sm text-red-500">
-          {state.error}
+      {errorMessage && (
+        <p
+          className="mt-4 text-sm text-red-500"
+          role="alert"
+        >
+          {errorMessage}
         </p>
       )}
 
@@ -64,22 +77,20 @@ export default function LoginForm() {
         disabled={isPending}
         className="primary-button mt-6 w-full"
       >
-        {isPending
-          ? "Signing in..."
-          : "Sign In"}
+        {isPending ? "Signing in..." : "Sign In"}
       </button>
 
       <div className="mt-6 rounded-lg bg-[var(--surface-secondary)] p-4 text-sm muted-text">
-        <p>
-          Demo credentials:
+        <p className="font-medium">
+          Demo credentials
         </p>
 
         <p className="mt-1">
-          admin@email.com
+          Email: admin@email.com
         </p>
 
         <p>
-          admin123
+          Password: admin123
         </p>
       </div>
     </form>

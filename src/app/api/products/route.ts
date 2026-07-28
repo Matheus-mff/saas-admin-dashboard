@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 
+import {
+  requireAdmin,
+  requireAuthenticatedUser,
+} from "@/lib/apiAuth";
+
 import { prisma } from "@/lib/prisma";
 
 type CreateProductBody = {
@@ -20,16 +25,27 @@ function parseNumber(value: unknown): number | null {
 }
 
 export async function GET() {
+  const authResult =
+    await requireAuthenticatedUser();
+
+  if (authResult.response) {
+    return authResult.response;
+  }
+
   try {
-    const products = await prisma.product.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const products =
+      await prisma.product.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
 
     return NextResponse.json(products);
   } catch (error) {
-    console.error("GET /api/products failed:", error);
+    console.error(
+      "GET /api/products failed:",
+      error
+    );
 
     return NextResponse.json(
       {
@@ -43,6 +59,12 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authResult = await requireAdmin();
+
+  if (authResult.response) {
+    return authResult.response;
+  }
+
   try {
     const body =
       (await request.json()) as CreateProductBody;
@@ -58,7 +80,8 @@ export async function POST(request: Request) {
     if (!name) {
       return NextResponse.json(
         {
-          message: "Product name is required.",
+          message:
+            "Product name is required.",
         },
         {
           status: 400,
@@ -114,7 +137,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        message: "Unable to create product.",
+        message:
+          "Unable to create product.",
       },
       {
         status: 500,

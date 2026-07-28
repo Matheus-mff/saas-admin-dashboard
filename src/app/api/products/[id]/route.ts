@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { requireAdmin } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 
 type UpdateProductBody = {
@@ -14,7 +15,9 @@ type ProductRouteContext = {
   }>;
 };
 
-function parseProductId(id: string): number | null {
+function parseProductId(
+  id: string
+): number | null {
   const parsedId = Number(id);
 
   if (
@@ -27,7 +30,9 @@ function parseProductId(id: string): number | null {
   return parsedId;
 }
 
-function parseNumber(value: unknown): number | null {
+function parseNumber(
+  value: unknown
+): number | null {
   if (
     typeof value !== "number" ||
     !Number.isFinite(value)
@@ -42,6 +47,12 @@ export async function PATCH(
   request: Request,
   { params }: ProductRouteContext
 ) {
+  const authResult = await requireAdmin();
+
+  if (authResult.response) {
+    return authResult.response;
+  }
+
   try {
     const { id } = await params;
     const productId = parseProductId(id);
@@ -61,6 +72,10 @@ export async function PATCH(
       await prisma.product.findUnique({
         where: {
           id: productId,
+        },
+
+        select: {
+          id: true,
         },
       });
 
@@ -89,7 +104,8 @@ export async function PATCH(
     if (!name) {
       return NextResponse.json(
         {
-          message: "Product name is required.",
+          message:
+            "Product name is required.",
         },
         {
           status: 400,
@@ -138,7 +154,9 @@ export async function PATCH(
         },
       });
 
-    return NextResponse.json(updatedProduct);
+    return NextResponse.json(
+      updatedProduct
+    );
   } catch (error) {
     console.error(
       "PATCH /api/products/[id] failed:",
@@ -147,7 +165,8 @@ export async function PATCH(
 
     return NextResponse.json(
       {
-        message: "Unable to update product.",
+        message:
+          "Unable to update product.",
       },
       {
         status: 500,
@@ -160,6 +179,12 @@ export async function DELETE(
   _request: Request,
   { params }: ProductRouteContext
 ) {
+  const authResult = await requireAdmin();
+
+  if (authResult.response) {
+    return authResult.response;
+  }
+
   try {
     const { id } = await params;
     const productId = parseProductId(id);
@@ -179,6 +204,10 @@ export async function DELETE(
       await prisma.product.findUnique({
         where: {
           id: productId,
+        },
+
+        select: {
+          id: true,
         },
       });
 
@@ -210,7 +239,8 @@ export async function DELETE(
 
     return NextResponse.json(
       {
-        message: "Unable to delete product.",
+        message:
+          "Unable to delete product.",
       },
       {
         status: 500,

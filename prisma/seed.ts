@@ -1,6 +1,7 @@
 import "dotenv/config";
 
 import { PrismaPg } from "@prisma/adapter-pg";
+import { hash } from "bcryptjs";
 import { Pool } from "pg";
 
 import { PrismaClient } from "../src/generated/prisma/client";
@@ -23,8 +24,19 @@ async function main() {
   await prisma.product.deleteMany();
   await prisma.user.deleteMany();
 
+  const demoPasswordHash = await hash(
+    "admin123",
+    12
+  );
+
   await prisma.user.createMany({
     data: [
+      {
+        name: "Demo Admin",
+        email: "admin@email.com",
+        role: "Admin",
+        passwordHash: demoPasswordHash,
+      },
       {
         name: "John Doe",
         email: "john.doe@email.com",

@@ -1,35 +1,28 @@
 "use server";
 
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { AuthError } from "next-auth";
 
-export type LoginState = {
-  error: string;
-};
+import { signIn } from "@/auth";
 
 export async function login(
-  previousState: LoginState,
+  _previousState: string | undefined,
   formData: FormData
-): Promise<LoginState> {
-  const email = formData.get("email");
-  const password = formData.get("password");
+): Promise<string | undefined> {
+  try {
+    await signIn("credentials", {
+      email: formData.get("email"),
+      password: formData.get("password"),
+      redirectTo: "/dashboard",
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      if (error.type === "CredentialsSignin") {
+        return "Invalid email or password.";
+      }
 
-  if (
-    email !== "admin@email.com" ||
-    password !== "admin123"
-  ) {
-    return {
-      error: "Invalid email or password.",
-    };
+      return "Unable to sign in. Please try again.";
+    }
+
+    throw error;
   }
-
-  const cookieStore = await cookies();
-
-  cookieStore.set("session", "authenticated", {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-  });
-
-  redirect("/dashboard");
 }

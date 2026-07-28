@@ -2,39 +2,66 @@
 
 import { useState } from "react";
 
+import { Settings } from "@/types/settings";
+
 type SettingsFormProps = {
-  onSave: () => void | Promise<void>;
+  initialValues: Settings;
+
+  onSave: (
+    settings: Settings
+  ) => Promise<string | null>;
 };
 
 export default function SettingsForm({
+  initialValues,
   onSave,
 }: SettingsFormProps) {
-  const [name, setName] = useState("Matheus");
+  const [name, setName] = useState(
+    initialValues.name
+  );
+
   const [email, setEmail] = useState(
-    "matheus@email.com"
+    initialValues.email
   );
+
   const [company, setCompany] = useState(
-    "Acme SaaS"
+    initialValues.company
   );
+
   const [
     emailNotifications,
     setEmailNotifications,
-  ] = useState(true);
+  ] = useState(
+    initialValues.emailNotifications
+  );
+
+  const [errorMessage, setErrorMessage] =
+    useState("");
 
   const [isSaving, setIsSaving] =
     useState(false);
 
   async function handleSubmit(
-    e: React.SubmitEvent<HTMLFormElement>
+    event: React.SubmitEvent<HTMLFormElement>
   ) {
-    e.preventDefault();
+    event.preventDefault();
 
     if (isSaving) return;
 
+    setErrorMessage("");
     setIsSaving(true);
 
     try {
-      await onSave();
+      const error = await onSave({
+        name,
+        email,
+        company,
+        emailNotifications,
+      });
+
+      if (error) {
+        setErrorMessage(error);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -71,9 +98,10 @@ export default function SettingsForm({
                 id="settings-name"
                 type="text"
                 value={name}
-                onChange={(e) =>
-                  setName(e.target.value)
+                onChange={(event) =>
+                  setName(event.target.value)
                 }
+                required
                 className="form-control"
               />
             </div>
@@ -90,9 +118,10 @@ export default function SettingsForm({
                 id="settings-email"
                 type="email"
                 value={email}
-                onChange={(e) =>
-                  setEmail(e.target.value)
+                onChange={(event) =>
+                  setEmail(event.target.value)
                 }
+                required
                 className="form-control"
               />
             </div>
@@ -120,9 +149,10 @@ export default function SettingsForm({
               id="settings-company"
               type="text"
               value={company}
-              onChange={(e) =>
-                setCompany(e.target.value)
+              onChange={(event) =>
+                setCompany(event.target.value)
               }
+              required
               className="form-control"
             />
           </div>
@@ -152,14 +182,23 @@ export default function SettingsForm({
             <input
               type="checkbox"
               checked={emailNotifications}
-              onChange={(e) =>
+              onChange={(event) =>
                 setEmailNotifications(
-                  e.target.checked
+                  event.target.checked
                 )
               }
             />
           </label>
         </section>
+
+        {errorMessage && (
+          <p
+            className="text-sm text-red-500"
+            role="alert"
+          >
+            {errorMessage}
+          </p>
+        )}
 
         <div className="flex justify-end">
           <button

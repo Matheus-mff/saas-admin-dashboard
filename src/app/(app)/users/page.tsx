@@ -28,7 +28,7 @@ import {
 
 import { User } from "@/types/user";
 
-const USERS_PER_PAGE = 2;
+const USERS_PER_PAGE = 10;
 
 export default function UsersPage() {
   const [search, setSearch] = useState("");
