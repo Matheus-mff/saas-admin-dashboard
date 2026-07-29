@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireAdmin } from "@/lib/apiAuth";
+import { requireManagerOrAdmin } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 
 type UpdateProductBody = {
@@ -47,7 +47,8 @@ export async function PATCH(
   request: Request,
   { params }: ProductRouteContext
 ) {
-  const authResult = await requireAdmin();
+  const authResult =
+    await requireManagerOrAdmin();
 
   if (authResult.response) {
     return authResult.response;
@@ -55,12 +56,15 @@ export async function PATCH(
 
   try {
     const { id } = await params;
-    const productId = parseProductId(id);
+
+    const productId =
+      parseProductId(id);
 
     if (!productId) {
       return NextResponse.json(
         {
-          message: "Invalid product ID.",
+          message:
+            "Invalid product ID.",
         },
         {
           status: 400,
@@ -68,10 +72,15 @@ export async function PATCH(
       );
     }
 
+    const workspaceId =
+      authResult.session.user
+        .workspaceId;
+
     const existingProduct =
-      await prisma.product.findUnique({
+      await prisma.product.findFirst({
         where: {
           id: productId,
+          workspaceId,
         },
 
         select: {
@@ -82,7 +91,8 @@ export async function PATCH(
     if (!existingProduct) {
       return NextResponse.json(
         {
-          message: "Product not found.",
+          message:
+            "Product not found.",
         },
         {
           status: 404,
@@ -98,8 +108,11 @@ export async function PATCH(
         ? body.name.trim()
         : "";
 
-    const price = parseNumber(body.price);
-    const stock = parseNumber(body.stock);
+    const price =
+      parseNumber(body.price);
+
+    const stock =
+      parseNumber(body.stock);
 
     if (!name) {
       return NextResponse.json(
@@ -113,7 +126,10 @@ export async function PATCH(
       );
     }
 
-    if (price === null || price <= 0) {
+    if (
+      price === null ||
+      price <= 0
+    ) {
       return NextResponse.json(
         {
           message:
@@ -145,6 +161,7 @@ export async function PATCH(
       await prisma.product.update({
         where: {
           id: productId,
+          workspaceId,
         },
 
         data: {
@@ -179,7 +196,8 @@ export async function DELETE(
   _request: Request,
   { params }: ProductRouteContext
 ) {
-  const authResult = await requireAdmin();
+  const authResult =
+    await requireManagerOrAdmin();
 
   if (authResult.response) {
     return authResult.response;
@@ -187,12 +205,15 @@ export async function DELETE(
 
   try {
     const { id } = await params;
-    const productId = parseProductId(id);
+
+    const productId =
+      parseProductId(id);
 
     if (!productId) {
       return NextResponse.json(
         {
-          message: "Invalid product ID.",
+          message:
+            "Invalid product ID.",
         },
         {
           status: 400,
@@ -200,10 +221,15 @@ export async function DELETE(
       );
     }
 
+    const workspaceId =
+      authResult.session.user
+        .workspaceId;
+
     const existingProduct =
-      await prisma.product.findUnique({
+      await prisma.product.findFirst({
         where: {
           id: productId,
+          workspaceId,
         },
 
         select: {
@@ -214,7 +240,8 @@ export async function DELETE(
     if (!existingProduct) {
       return NextResponse.json(
         {
-          message: "Product not found.",
+          message:
+            "Product not found.",
         },
         {
           status: 404,
@@ -225,6 +252,7 @@ export async function DELETE(
     await prisma.product.delete({
       where: {
         id: productId,
+        workspaceId,
       },
     });
 

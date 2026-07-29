@@ -13,7 +13,9 @@ type AuthFailure = {
   response: NextResponse;
 };
 
-type AuthResult = AuthSuccess | AuthFailure;
+type AuthResult =
+  | AuthSuccess
+  | AuthFailure;
 
 export async function requireAuthenticatedUser(): Promise<AuthResult> {
   const session = await auth();
@@ -21,6 +23,7 @@ export async function requireAuthenticatedUser(): Promise<AuthResult> {
   if (!session?.user) {
     return {
       session: null,
+
       response: NextResponse.json(
         {
           message: "Unauthorized.",
@@ -39,15 +42,52 @@ export async function requireAuthenticatedUser(): Promise<AuthResult> {
 }
 
 export async function requireAdmin(): Promise<AuthResult> {
-  const result = await requireAuthenticatedUser();
+  const result =
+    await requireAuthenticatedUser();
 
   if (result.response) {
     return result;
   }
 
-  if (result.session.user.role !== "Admin") {
+  if (
+    result.session.user.role !==
+    "Admin"
+  ) {
     return {
       session: null,
+
+      response: NextResponse.json(
+        {
+          message: "Forbidden.",
+        },
+        {
+          status: 403,
+        }
+      ),
+    };
+  }
+
+  return result;
+}
+
+export async function requireManagerOrAdmin(): Promise<AuthResult> {
+  const result =
+    await requireAuthenticatedUser();
+
+  if (result.response) {
+    return result;
+  }
+
+  const role =
+    result.session.user.role;
+
+  if (
+    role !== "Admin" &&
+    role !== "Manager"
+  ) {
+    return {
+      session: null,
+
       response: NextResponse.json(
         {
           message: "Forbidden.",

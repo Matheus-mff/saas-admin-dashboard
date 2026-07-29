@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 
-import {
-  requireAuthenticatedUser,
-} from "@/lib/apiAuth";
-
+import { requireAuthenticatedUser } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -17,6 +14,11 @@ export async function GET() {
   try {
     const orders =
       await prisma.order.findMany({
+        where: {
+          workspaceId:
+            authResult.session.user.workspaceId,
+        },
+
         orderBy: {
           createdAt: "desc",
         },

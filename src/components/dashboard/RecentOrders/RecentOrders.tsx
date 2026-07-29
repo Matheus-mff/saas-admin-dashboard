@@ -1,4 +1,5 @@
 import { Order } from "@/types/order";
+
 import { getOrderStatusClass } from "@/utils/getOrderStatusClass";
 
 type RecentOrdersProps = {
@@ -20,60 +21,82 @@ export default function RecentOrders({
         </p>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="table-header text-left text-sm muted-text">
-            <tr>
-              <th className="px-6 py-3">
-                Order
-              </th>
+      {orders.length === 0 ? (
+        <div className="flex min-h-52 items-center justify-center px-6 py-10 text-center">
+          <div>
+            <p className="font-medium">
+              No orders yet
+            </p>
 
-              <th className="px-6 py-3">
-                Customer
-              </th>
+            <p className="mt-1 text-sm muted-text">
+              Recent customer purchases will appear
+              here when orders are created.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="table-header text-left text-sm muted-text">
+              <tr>
+                <th className="px-6 py-3">
+                  Order
+                </th>
 
-              <th className="px-6 py-3">
-                Total
-              </th>
+                <th className="px-6 py-3">
+                  Customer
+                </th>
 
-              <th className="px-6 py-3">
-                Status
-              </th>
-            </tr>
-          </thead>
+                <th className="px-6 py-3">
+                  Total
+                </th>
 
-          <tbody>
-            {orders.map((order) => (
-              <tr
-                key={order.id}
-                className="table-row"
-              >
-                <td className="px-6 py-4">
-                  #{order.id}
-                </td>
-
-                <td className="px-6 py-4">
-                  {order.customer}
-                </td>
-
-                <td className="px-6 py-4">
-                  ${order.total.toLocaleString()}
-                </td>
-
-                <td className="px-6 py-4">
-                  <span
-                    className={`status-badge ${getOrderStatusClass(
-                      order.status
-                    )}`}
-                  >
-                    {order.status}
-                  </span>
-                </td>
+                <th className="px-6 py-3">
+                  Status
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+
+            <tbody>
+              {orders.map((order) => (
+                <tr
+                  key={order.id}
+                  className="table-row"
+                >
+                  <td className="px-6 py-4">
+                    #{order.id}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    {order.customer}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    $
+                    {order.total.toLocaleString(
+                      "en-US",
+                      {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }
+                    )}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <span
+                      className={`status-badge ${getOrderStatusClass(
+                        order.status
+                      )}`}
+                    >
+                      {order.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

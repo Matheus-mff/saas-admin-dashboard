@@ -1,18 +1,33 @@
 import { NextResponse } from "next/server";
-
-import {
-  USER_ROLES,
-  UserRole,
-} from "@/constants/userRoles";
+import { z } from "zod";
 
 import { requireAdmin } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 
-type UpdateUserBody = {
-  name?: unknown;
-  email?: unknown;
-  role?: unknown;
-};
+const updateUserSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(
+      2,
+      "Name must contain at least 2 characters."
+    )
+    .max(
+      100,
+      "Name is too long."
+    ),
+
+  email: z.email({
+    error:
+      "Please enter a valid email.",
+  }),
+
+  role: z.enum([
+    "Admin",
+    "Manager",
+    "User",
+  ]),
+});
 
 type UserRouteContext = {
   params: Promise<{
@@ -20,16 +35,9 @@ type UserRouteContext = {
   }>;
 };
 
-function isValidRole(role: unknown): role is UserRole {
-  return (
-    typeof role === "string" &&
-    USER_ROLES.some(
-      (validRole) => validRole === role
-    )
-  );
-}
-
-function parseUserId(id: string): number | null {
+function parseUserId(
+  id: string
+): number | null {
   const parsedId = Number(id);
 
   if (
@@ -42,11 +50,23 @@ function parseUserId(id: string): number | null {
   return parsedId;
 }
 
+function isUniqueConstraintError(
+  error: unknown
+): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "P2002"
+  );
+}
+
 export async function PATCH(
   request: Request,
   { params }: UserRouteContext
 ) {
-  const authResult = await requireAdmin();
+  const authResult =
+    await requireAdmin();
 
   if (authResult.response) {
     return authResult.response;
@@ -59,7 +79,8 @@ export async function PATCH(
     if (!userId) {
       return NextResponse.json(
         {
-          message: "Invalid user ID.",
+          message:
+            "Invalid user ID.",
         },
         {
           status: 400,
@@ -67,22 +88,32 @@ export async function PATCH(
       );
     }
 
+    const workspaceId =
+      authResult.session.user
+        .workspaceId;
+
+    const currentUserId = Number(
+      authResult.session.user.id
+    );
+
     const existingUser =
-      await prisma.user.findUnique({
+      await prisma.user.findFirst({
         where: {
           id: userId,
+          workspaceId,
         },
 
         select: {
           id: true,
-          passwordHash: true,
+          role: true,
         },
       });
 
     if (!existingUser) {
       return NextResponse.json(
         {
-          message: "User not found.",
+          message:
+            "User not found.",
         },
         {
           status: 404,
@@ -90,11 +121,45 @@ export async function PATCH(
       );
     }
 
-    if (existingUser.passwordHash) {
+    const body: unknown =
+      await request.json();
+
+    const parsedBody =
+      updateUserSchema.safeParse(body);
+
+    if (!parsedBody.success) {
       return NextResponse.json(
         {
           message:
-            "Login accounts cannot be edited.",
+            parsedBody.error.issues[0]
+              ?.message ??
+            "Invalid user data.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const name =
+      parsedBody.data.name;
+
+    const email =
+      parsedBody.data.email
+        .trim()
+        .toLowerCase();
+
+    const role =
+      parsedBody.data.role;
+
+    if (
+      userId === currentUserId &&
+      role !== "Admin"
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "You cannot remove your own Admin role.",
         },
         {
           status: 403,
@@ -102,65 +167,29 @@ export async function PATCH(
       );
     }
 
-    const body =
-      (await request.json()) as UpdateUserBody;
+    if (
+      existingUser.role === "Admin" &&
+      role !== "Admin"
+    ) {
+      const adminCount =
+        await prisma.user.count({
+          where: {
+            workspaceId,
+            role: "Admin",
+          },
+        });
 
-    const name =
-      typeof body.name === "string"
-        ? body.name.trim()
-        : "";
-
-    const email =
-      typeof body.email === "string"
-        ? body.email.trim().toLowerCase()
-        : "";
-
-    const role = body.role;
-
-    if (!name) {
-      return NextResponse.json(
-        {
-          message: "Name is required.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    if (!email) {
-      return NextResponse.json(
-        {
-          message: "Email is required.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      return NextResponse.json(
-        {
-          message:
-            "Please enter a valid email.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    if (!isValidRole(role)) {
-      return NextResponse.json(
-        {
-          message:
-            "Please select a valid role.",
-        },
-        {
-          status: 400,
-        }
-      );
+      if (adminCount <= 1) {
+        return NextResponse.json(
+          {
+            message:
+              "The workspace must have at least one Admin.",
+          },
+          {
+            status: 403,
+          }
+        );
+      }
     }
 
     const userWithSameEmail =
@@ -193,6 +222,7 @@ export async function PATCH(
       await prisma.user.update({
         where: {
           id: userId,
+          workspaceId,
         },
 
         data: {
@@ -209,8 +239,24 @@ export async function PATCH(
         },
       });
 
-    return NextResponse.json(updatedUser);
+    return NextResponse.json(
+      updatedUser
+    );
   } catch (error) {
+    if (
+      isUniqueConstraintError(error)
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "A user with this email already exists.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
     console.error(
       "PATCH /api/users/[id] failed:",
       error
@@ -218,7 +264,8 @@ export async function PATCH(
 
     return NextResponse.json(
       {
-        message: "Unable to update user.",
+        message:
+          "Unable to update user.",
       },
       {
         status: 500,
@@ -231,7 +278,8 @@ export async function DELETE(
   _request: Request,
   { params }: UserRouteContext
 ) {
-  const authResult = await requireAdmin();
+  const authResult =
+    await requireAdmin();
 
   if (authResult.response) {
     return authResult.response;
@@ -244,7 +292,8 @@ export async function DELETE(
     if (!userId) {
       return NextResponse.json(
         {
-          message: "Invalid user ID.",
+          message:
+            "Invalid user ID.",
         },
         {
           status: 400,
@@ -252,34 +301,19 @@ export async function DELETE(
       );
     }
 
-    const existingUser =
-      await prisma.user.findUnique({
-        where: {
-          id: userId,
-        },
+    const workspaceId =
+      authResult.session.user
+        .workspaceId;
 
-        select: {
-          id: true,
-          passwordHash: true,
-        },
-      });
+    const currentUserId = Number(
+      authResult.session.user.id
+    );
 
-    if (!existingUser) {
-      return NextResponse.json(
-        {
-          message: "User not found.",
-        },
-        {
-          status: 404,
-        }
-      );
-    }
-
-    if (existingUser.passwordHash) {
+    if (userId === currentUserId) {
       return NextResponse.json(
         {
           message:
-            "Login accounts cannot be deleted.",
+            "You cannot delete your own account.",
         },
         {
           status: 403,
@@ -287,9 +321,59 @@ export async function DELETE(
       );
     }
 
+    const existingUser =
+      await prisma.user.findFirst({
+        where: {
+          id: userId,
+          workspaceId,
+        },
+
+        select: {
+          id: true,
+          role: true,
+        },
+      });
+
+    if (!existingUser) {
+      return NextResponse.json(
+        {
+          message:
+            "User not found.",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    if (
+      existingUser.role === "Admin"
+    ) {
+      const adminCount =
+        await prisma.user.count({
+          where: {
+            workspaceId,
+            role: "Admin",
+          },
+        });
+
+      if (adminCount <= 1) {
+        return NextResponse.json(
+          {
+            message:
+              "The workspace must have at least one Admin.",
+          },
+          {
+            status: 403,
+          }
+        );
+      }
+    }
+
     await prisma.user.delete({
       where: {
         id: userId,
+        workspaceId,
       },
     });
 
@@ -304,7 +388,8 @@ export async function DELETE(
 
     return NextResponse.json(
       {
-        message: "Unable to delete user.",
+        message:
+          "Unable to delete user.",
       },
       {
         status: 500,

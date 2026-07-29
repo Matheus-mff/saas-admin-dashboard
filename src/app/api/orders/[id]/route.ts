@@ -5,7 +5,7 @@ import {
   OrderStatus,
 } from "@/constants/orderStatuses";
 
-import { requireAdmin } from "@/lib/apiAuth";
+import { requireManagerOrAdmin } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 
 type UpdateOrderBody = {
@@ -49,7 +49,8 @@ export async function PATCH(
   request: Request,
   { params }: OrderRouteContext
 ) {
-  const authResult = await requireAdmin();
+  const authResult =
+    await requireManagerOrAdmin();
 
   if (authResult.response) {
     return authResult.response;
@@ -57,12 +58,15 @@ export async function PATCH(
 
   try {
     const { id } = await params;
-    const orderId = parseOrderId(id);
+
+    const orderId =
+      parseOrderId(id);
 
     if (!orderId) {
       return NextResponse.json(
         {
-          message: "Invalid order ID.",
+          message:
+            "Invalid order ID.",
         },
         {
           status: 400,
@@ -70,10 +74,15 @@ export async function PATCH(
       );
     }
 
+    const workspaceId =
+      authResult.session.user
+        .workspaceId;
+
     const existingOrder =
-      await prisma.order.findUnique({
+      await prisma.order.findFirst({
         where: {
           id: orderId,
+          workspaceId,
         },
 
         select: {
@@ -84,7 +93,8 @@ export async function PATCH(
     if (!existingOrder) {
       return NextResponse.json(
         {
-          message: "Order not found.",
+          message:
+            "Order not found.",
         },
         {
           status: 404,
@@ -95,7 +105,9 @@ export async function PATCH(
     const body =
       (await request.json()) as UpdateOrderBody;
 
-    if (!isValidStatus(body.status)) {
+    if (
+      !isValidStatus(body.status)
+    ) {
       return NextResponse.json(
         {
           message:
@@ -111,6 +123,7 @@ export async function PATCH(
       await prisma.order.update({
         where: {
           id: orderId,
+          workspaceId,
         },
 
         data: {

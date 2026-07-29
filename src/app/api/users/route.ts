@@ -1,9 +1,6 @@
+import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
-
-import {
-  USER_ROLES,
-  UserRole,
-} from "@/constants/userRoles";
+import { z } from "zod";
 
 import {
   requireAdmin,
@@ -12,18 +9,50 @@ import {
 
 import { prisma } from "@/lib/prisma";
 
-type CreateUserBody = {
-  name?: unknown;
-  email?: unknown;
-  role?: unknown;
-};
-
-function isValidRole(role: unknown): role is UserRole {
-  return (
-    typeof role === "string" &&
-    USER_ROLES.some(
-      (validRole) => validRole === role
+const createUserSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(
+      2,
+      "Name must contain at least 2 characters."
     )
+    .max(
+      100,
+      "Name is too long."
+    ),
+
+  email: z.email({
+    error:
+      "Please enter a valid email.",
+  }),
+
+  role: z.enum([
+    "Admin",
+    "Manager",
+    "User",
+  ]),
+
+  password: z
+    .string()
+    .min(
+      8,
+      "Password must contain at least 8 characters."
+    )
+    .max(
+      100,
+      "Password is too long."
+    ),
+});
+
+function isUniqueConstraintError(
+  error: unknown
+): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "P2002"
   );
 }
 
@@ -36,26 +65,37 @@ export async function GET() {
   }
 
   try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-      },
+    const users =
+      await prisma.user.findMany({
+        where: {
+          workspaceId:
+            authResult.session.user
+              .workspaceId,
+        },
 
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
 
     return NextResponse.json(users);
   } catch (error) {
-    console.error("GET /api/users failed:", error);
+    console.error(
+      "GET /api/users failed:",
+      error
+    );
 
     return NextResponse.json(
       {
-        message: "Unable to load users.",
+        message:
+          "Unable to load users.",
       },
       {
         status: 500,
@@ -64,72 +104,53 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
-  const authResult = await requireAdmin();
+export async function POST(
+  request: Request
+) {
+  const authResult =
+    await requireAdmin();
 
   if (authResult.response) {
     return authResult.response;
   }
 
   try {
-    const body =
-      (await request.json()) as CreateUserBody;
+    const body: unknown =
+      await request.json();
+
+    const parsedBody =
+      createUserSchema.safeParse(body);
+
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        {
+          message:
+            parsedBody.error.issues[0]
+              ?.message ??
+            "Invalid user data.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
     const name =
-      typeof body.name === "string"
-        ? body.name.trim()
-        : "";
+      parsedBody.data.name;
 
     const email =
-      typeof body.email === "string"
-        ? body.email.trim().toLowerCase()
-        : "";
+      parsedBody.data.email
+        .trim()
+        .toLowerCase();
 
-    const role = body.role;
+    const role =
+      parsedBody.data.role;
 
-    if (!name) {
-      return NextResponse.json(
-        {
-          message: "Name is required.",
-        },
-        {
-          status: 400,
-        }
+    const passwordHash =
+      await hash(
+        parsedBody.data.password,
+        12
       );
-    }
-
-    if (!email) {
-      return NextResponse.json(
-        {
-          message: "Email is required.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      return NextResponse.json(
-        {
-          message: "Please enter a valid email.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    if (!isValidRole(role)) {
-      return NextResponse.json(
-        {
-          message: "Please select a valid role.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
 
     const existingUser =
       await prisma.user.findUnique({
@@ -154,25 +175,48 @@ export async function POST(request: Request) {
       );
     }
 
-    const newUser = await prisma.user.create({
-      data: {
-        name,
-        email,
-        role,
-      },
+    const newUser =
+      await prisma.user.create({
+        data: {
+          name,
+          email,
+          role,
+          passwordHash,
 
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-      },
-    });
+          workspaceId:
+            authResult.session.user
+              .workspaceId,
+        },
 
-    return NextResponse.json(newUser, {
-      status: 201,
-    });
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      });
+
+    return NextResponse.json(
+      newUser,
+      {
+        status: 201,
+      }
+    );
   } catch (error) {
+    if (
+      isUniqueConstraintError(error)
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "A user with this email already exists.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
     console.error(
       "POST /api/users failed:",
       error
@@ -180,7 +224,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        message: "Unable to create user.",
+        message:
+          "Unable to create user.",
       },
       {
         status: 500,

@@ -1,12 +1,20 @@
 "use client";
 
+import Link from "next/link";
+
 import { useActionState } from "react";
 
 import { login } from "@/app/(auth)/login/actions";
 
 export default function LoginForm() {
-  const [errorMessage, formAction, isPending] =
-    useActionState(login, undefined);
+  const [
+    errorMessage,
+    formAction,
+    isPending,
+  ] = useActionState(
+    login,
+    undefined
+  );
 
   return (
     <form
@@ -77,7 +85,9 @@ export default function LoginForm() {
         disabled={isPending}
         className="primary-button mt-6 w-full"
       >
-        {isPending ? "Signing in..." : "Sign In"}
+        {isPending
+          ? "Signing in..."
+          : "Sign In"}
       </button>
 
       <div className="mt-6 rounded-lg bg-[var(--surface-secondary)] p-4 text-sm muted-text">
@@ -93,6 +103,16 @@ export default function LoginForm() {
           Password: admin123
         </p>
       </div>
+
+      <p className="mt-6 text-center text-sm muted-text">
+        Want your own workspace?{" "}
+        <Link
+          href="/register"
+          className="font-medium text-blue-600 hover:underline"
+        >
+          Create an account
+        </Link>
+      </p>
     </form>
   );
 }

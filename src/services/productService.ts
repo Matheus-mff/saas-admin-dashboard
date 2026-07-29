@@ -1,21 +1,24 @@
 import { Product } from "@/types/product";
-import { getApiErrorMessage } from "@/utils/getApiErrorMessage";
 
-type ProductInput = Omit<Product, "id">;
+import { getApiErrorMessage } from "@/utils/getApiErrorMessage";
+import { notifyDashboardDataChanged } from "@/utils/dashboardEvents";
+
+export type ProductInput = {
+  name: string;
+  price: number;
+  stock: number;
+};
 
 export async function getProducts(): Promise<Product[]> {
-  const response = await fetch("/api/products", {
-    method: "GET",
-    cache: "no-store",
-  });
+  const response = await fetch("/api/products");
 
   if (!response.ok) {
-    const message = await getApiErrorMessage(
-      response,
-      "Unable to load products."
+    throw new Error(
+      await getApiErrorMessage(
+        response,
+        "Unable to load products."
+      )
     );
-
-    throw new Error(message);
   }
 
   return response.json();
@@ -35,56 +38,74 @@ export async function createProduct(
   });
 
   if (!response.ok) {
-    const message = await getApiErrorMessage(
-      response,
-      "Unable to create product."
+    throw new Error(
+      await getApiErrorMessage(
+        response,
+        "Unable to create product."
+      )
     );
-
-    throw new Error(message);
   }
 
-  return response.json();
+  const newProduct: Product =
+    await response.json();
+
+  notifyDashboardDataChanged();
+
+  return newProduct;
 }
 
 export async function updateProduct(
   id: number,
   product: ProductInput
 ): Promise<Product> {
-  const response = await fetch(`/api/products/${id}`, {
-    method: "PATCH",
+  const response = await fetch(
+    `/api/products/${id}`,
+    {
+      method: "PATCH",
 
-    headers: {
-      "Content-Type": "application/json",
-    },
+      headers: {
+        "Content-Type": "application/json",
+      },
 
-    body: JSON.stringify(product),
-  });
+      body: JSON.stringify(product),
+    }
+  );
 
   if (!response.ok) {
-    const message = await getApiErrorMessage(
-      response,
-      "Unable to update product."
+    throw new Error(
+      await getApiErrorMessage(
+        response,
+        "Unable to update product."
+      )
     );
-
-    throw new Error(message);
   }
 
-  return response.json();
+  const updatedProduct: Product =
+    await response.json();
+
+  notifyDashboardDataChanged();
+
+  return updatedProduct;
 }
 
 export async function deleteProduct(
   id: number
 ): Promise<void> {
-  const response = await fetch(`/api/products/${id}`, {
-    method: "DELETE",
-  });
+  const response = await fetch(
+    `/api/products/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
 
   if (!response.ok) {
-    const message = await getApiErrorMessage(
-      response,
-      "Unable to delete product."
+    throw new Error(
+      await getApiErrorMessage(
+        response,
+        "Unable to delete product."
+      )
     );
-
-    throw new Error(message);
   }
+
+  notifyDashboardDataChanged();
 }

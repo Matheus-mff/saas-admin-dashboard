@@ -1,17 +1,9 @@
 import { NextResponse } from "next/server";
 
-import {
-  ORDER_STATUSES,
-} from "@/constants/orderStatuses";
+import { ORDER_STATUSES } from "@/constants/orderStatuses";
+import { USER_ROLES } from "@/constants/userRoles";
 
-import {
-  USER_ROLES,
-} from "@/constants/userRoles";
-
-import {
-  requireAuthenticatedUser,
-} from "@/lib/apiAuth";
-
+import { requireAuthenticatedUser } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -21,6 +13,9 @@ export async function GET() {
   if (authResult.response) {
     return authResult.response;
   }
+
+  const workspaceId =
+    authResult.session.user.workspaceId;
 
   try {
     const [
@@ -32,13 +27,29 @@ export async function GET() {
       orderStatusGroups,
       recentOrders,
     ] = await Promise.all([
-      prisma.user.count(),
+      prisma.user.count({
+        where: {
+          workspaceId,
+        },
+      }),
 
-      prisma.product.count(),
+      prisma.product.count({
+        where: {
+          workspaceId,
+        },
+      }),
 
-      prisma.order.count(),
+      prisma.order.count({
+        where: {
+          workspaceId,
+        },
+      }),
 
       prisma.order.aggregate({
+        where: {
+          workspaceId,
+        },
+
         _sum: {
           total: true,
         },
@@ -46,6 +57,10 @@ export async function GET() {
 
       prisma.user.groupBy({
         by: ["role"],
+
+        where: {
+          workspaceId,
+        },
 
         _count: {
           role: true,
@@ -55,12 +70,20 @@ export async function GET() {
       prisma.order.groupBy({
         by: ["status"],
 
+        where: {
+          workspaceId,
+        },
+
         _count: {
           status: true,
         },
       }),
 
       prisma.order.findMany({
+        where: {
+          workspaceId,
+        },
+
         orderBy: {
           createdAt: "desc",
         },
@@ -105,6 +128,7 @@ export async function GET() {
         totalUsers,
         totalProducts,
         totalOrders,
+
         totalRevenue:
           revenueResult._sum.total ?? 0,
       },

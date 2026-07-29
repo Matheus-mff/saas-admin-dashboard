@@ -18,6 +18,10 @@ type OrderStatusChartProps = {
 export default function OrderStatusChart({
   data,
 }: OrderStatusChartProps) {
+  const hasOrders = data.some(
+    (item) => item.value > 0
+  );
+
   return (
     <div className="card p-6">
       <h2 className="text-lg font-semibold">
@@ -28,37 +32,52 @@ export default function OrderStatusChart({
         Current distribution of all orders.
       </p>
 
-      <BarChart
-        data={data}
-        responsive
-        style={{
-          width: "100%",
-          height: 300,
-        }}
-      >
-        <CartesianGrid
-          strokeDasharray="3 3"
-          vertical={false}
-        />
+      {hasOrders ? (
+        <BarChart
+          data={data}
+          responsive
+          style={{
+            width: "100%",
+            height: 300,
+          }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+          />
 
-        <XAxis
-          dataKey="name"
-          tickLine={false}
-        />
+          <XAxis
+            dataKey="name"
+            tickLine={false}
+          />
 
-        <YAxis
-          allowDecimals={false}
-          tickLine={false}
-        />
+          <YAxis
+            allowDecimals={false}
+            tickLine={false}
+          />
 
-        <Tooltip />
+          <Tooltip />
 
-        <Bar
-          dataKey="value"
-          fill="#2563eb"
-          radius={[6, 6, 0, 0]}
-        />
-      </BarChart>
+          <Bar
+            dataKey="value"
+            fill="#2563eb"
+            radius={[6, 6, 0, 0]}
+          />
+        </BarChart>
+      ) : (
+        <div className="flex h-[300px] items-center justify-center text-center">
+          <div>
+            <p className="font-medium">
+              No order data yet
+            </p>
+
+            <p className="mt-1 text-sm muted-text">
+              Order status activity will appear here
+              after orders are created.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

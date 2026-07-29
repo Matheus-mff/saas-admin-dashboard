@@ -6,6 +6,7 @@ import { Settings } from "@/types/settings";
 
 type SettingsFormProps = {
   initialValues: Settings;
+  canManageWorkspace: boolean;
 
   onSave: (
     settings: Settings
@@ -14,6 +15,7 @@ type SettingsFormProps = {
 
 export default function SettingsForm({
   initialValues,
+  canManageWorkspace,
   onSave,
 }: SettingsFormProps) {
   const [name, setName] = useState(
@@ -53,8 +55,10 @@ export default function SettingsForm({
 
     try {
       const error = await onSave({
-        name,
-        email,
+        name: name.trim(),
+        email: email
+          .trim()
+          .toLowerCase(),
         company,
         emailNotifications,
       });
@@ -97,11 +101,16 @@ export default function SettingsForm({
               <input
                 id="settings-name"
                 type="text"
+                autoComplete="name"
                 value={name}
                 onChange={(event) =>
-                  setName(event.target.value)
+                  setName(
+                    event.target.value
+                  )
                 }
                 required
+                minLength={1}
+                maxLength={100}
                 className="form-control"
               />
             </div>
@@ -117,9 +126,12 @@ export default function SettingsForm({
               <input
                 id="settings-email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(event) =>
-                  setEmail(event.target.value)
+                  setEmail(
+                    event.target.value
+                  )
                 }
                 required
                 className="form-control"
@@ -134,7 +146,9 @@ export default function SettingsForm({
           </h2>
 
           <p className="mt-1 text-sm muted-text">
-            Manage your workspace information.
+            {canManageWorkspace
+              ? "Manage your workspace information."
+              : "Only an Admin can change workspace information."}
           </p>
 
           <div className="mt-6">
@@ -142,7 +156,7 @@ export default function SettingsForm({
               htmlFor="settings-company"
               className="mb-1 block font-medium"
             >
-              Company name
+              Workspace name
             </label>
 
             <input
@@ -150,11 +164,28 @@ export default function SettingsForm({
               type="text"
               value={company}
               onChange={(event) =>
-                setCompany(event.target.value)
+                setCompany(
+                  event.target.value
+                )
               }
-              required
+              disabled={
+                isSaving ||
+                !canManageWorkspace
+              }
+              required={
+                canManageWorkspace
+              }
+              minLength={1}
+              maxLength={100}
               className="form-control"
             />
+
+            {!canManageWorkspace && (
+              <p className="mt-2 text-sm muted-text">
+                Contact a workspace Admin to
+                change this name.
+              </p>
+            )}
           </div>
         </section>
 
@@ -181,7 +212,9 @@ export default function SettingsForm({
 
             <input
               type="checkbox"
-              checked={emailNotifications}
+              checked={
+                emailNotifications
+              }
               onChange={(event) =>
                 setEmailNotifications(
                   event.target.checked

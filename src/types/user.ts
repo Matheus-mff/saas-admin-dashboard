@@ -7,4 +7,9 @@ export type User = {
   role: UserRole;
 };
 
-export type UserInput = Omit<User, "id">;
+export type UserInput = {
+  name: string;
+  email: string;
+  role: UserRole;
+  password?: string;
+};

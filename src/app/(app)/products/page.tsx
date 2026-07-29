@@ -12,18 +12,40 @@ import Modal from "@/components/ui/Modal/Modal";
 import TableSkeleton from "@/components/ui/Skeleton/TableSkeleton";
 import Toast from "@/components/ui/Toast/Toast";
 
+import { useCurrentUser } from "@/contexts/CurrentUserContext";
+
 import { useProducts } from "@/hooks/useProducts";
 import { useToast } from "@/hooks/useToast";
 
 import { Product } from "@/types/product";
 
 export default function ProductsPage() {
-  const [search, setSearch] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
-  const [productToDelete, setProductToDelete] = useState<Product | undefined>();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { canManageOperations } =
+    useCurrentUser();
 
-  const { toastMessage, toastType, showToast } = useToast();
+  const [search, setSearch] =
+    useState("");
+
+  const [
+    selectedProduct,
+    setSelectedProduct,
+  ] = useState<Product | undefined>();
+
+  const [
+    productToDelete,
+    setProductToDelete,
+  ] = useState<Product | undefined>();
+
+  const [
+    isModalOpen,
+    setIsModalOpen,
+  ] = useState(false);
+
+  const {
+    toastMessage,
+    toastType,
+    showToast,
+  } = useToast();
 
   const {
     products,
@@ -35,9 +57,21 @@ export default function ProductsPage() {
     removeProduct,
   } = useProducts();
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const normalizedSearch = search
+    .trim()
+    .toLowerCase();
+
+  const filteredProducts =
+    products.filter((product) =>
+      product.name
+        .toLowerCase()
+        .includes(normalizedSearch)
+    );
+
+  function closeProductModal() {
+    setSelectedProduct(undefined);
+    setIsModalOpen(false);
+  }
 
   if (loading) {
     return <TableSkeleton />;
@@ -52,6 +86,9 @@ export default function ProductsPage() {
     );
   }
 
+  const hasProducts =
+    products.length > 0;
+
   return (
     <div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -61,111 +98,185 @@ export default function ProductsPage() {
           </h1>
 
           <p className="mt-2 muted-text">
-            Manage the products available in your application.
+            {canManageOperations
+              ? "Manage the products available in your workspace."
+              : "View the products available in your workspace."}
           </p>
         </div>
 
-        <Button
-          onClick={() => {
-            setSelectedProduct(undefined);
-            setIsModalOpen(true);
-          }}
-        >
-          Add Product
-        </Button>
+        {canManageOperations && (
+          <Button
+            onClick={() => {
+              setSelectedProduct(
+                undefined
+              );
+
+              setIsModalOpen(true);
+            }}
+          >
+            Add Product
+          </Button>
+        )}
       </div>
 
-      <input
-        type="text"
-        placeholder="Search products..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="form-control mt-8"
-      />
+      {hasProducts && (
+        <input
+          type="search"
+          placeholder="Search products..."
+          value={search}
+          onChange={(event) =>
+            setSearch(
+              event.target.value
+            )
+          }
+          className="form-control mt-8"
+        />
+      )}
 
       <div className="mt-6">
-        {filteredProducts.length === 0 ? (
+        {products.length === 0 ? (
+          <EmptyState
+            title="No products yet"
+            description={
+              canManageOperations
+                ? "Create your first product to start tracking inventory."
+                : "This workspace does not have any products yet."
+            }
+          />
+        ) : filteredProducts.length ===
+          0 ? (
           <EmptyState
             title="No products found"
             description="Try another search term."
           />
         ) : (
           <ProductTable
-            products={filteredProducts}
+            products={
+              filteredProducts
+            }
+            canManage={
+              canManageOperations
+            }
             onEdit={(product) => {
-              setSelectedProduct(product);
+              setSelectedProduct(
+                product
+              );
+
               setIsModalOpen(true);
             }}
             onDelete={(product) => {
-              setProductToDelete(product);
+              setProductToDelete(
+                product
+              );
             }}
           />
         )}
       </div>
 
-      <Modal
-        open={isModalOpen}
-        title={selectedProduct ? "Edit Product" : "Add Product"}
-        onClose={() => {
-          setSelectedProduct(undefined);
-          setIsModalOpen(false);
-        }}
-      >
-        <ProductForm
-          product={selectedProduct}
-          onCancel={() => {
-            setSelectedProduct(undefined);
-            setIsModalOpen(false);
-          }}
-          onSubmit={async (product) => {
-            try {
-              if (selectedProduct) {
-                await editProduct(selectedProduct.id, product);
+      {canManageOperations && (
+        <>
+          <Modal
+            open={isModalOpen}
+            title={
+              selectedProduct
+                ? "Edit Product"
+                : "Add Product"
+            }
+            onClose={
+              closeProductModal
+            }
+          >
+            <ProductForm
+              product={
+                selectedProduct
+              }
+              onCancel={
+                closeProductModal
+              }
+              onSubmit={async (
+                product
+              ) => {
+                try {
+                  if (
+                    selectedProduct
+                  ) {
+                    await editProduct(
+                      selectedProduct.id,
+                      product
+                    );
 
-                showToast("Product updated successfully.");
-              } else {
-                await addProduct(product);
+                    showToast(
+                      "Product updated successfully."
+                    );
+                  } else {
+                    await addProduct(
+                      product
+                    );
 
-                showToast("Product created successfully.");
+                    showToast(
+                      "Product created successfully."
+                    );
+                  }
+
+                  closeProductModal();
+                } catch (error) {
+                  const message =
+                    error instanceof Error
+                      ? error.message
+                      : "Something went wrong.";
+
+                  showToast(
+                    message,
+                    "error"
+                  );
+                }
+              }}
+            />
+          </Modal>
+
+          <ConfirmModal
+            open={Boolean(
+              productToDelete
+            )}
+            title="Delete Product"
+            message={`Are you sure you want to delete "${productToDelete?.name}"?`}
+            onCancel={() =>
+              setProductToDelete(
+                undefined
+              )
+            }
+            onConfirm={async () => {
+              if (!productToDelete) {
+                return;
               }
 
-              setSelectedProduct(undefined);
-              setIsModalOpen(false);
-            } catch (error) {
-              const message =
-                error instanceof Error
-                  ? error.message
-                  : "Something went wrong.";
+              try {
+                await removeProduct(
+                  productToDelete.id
+                );
 
-              showToast(message, "error");
-            }
-          }}
-        />
-      </Modal>
+                showToast(
+                  "Product deleted successfully."
+                );
 
-      <ConfirmModal
-        open={!!productToDelete}
-        title="Delete Product"
-        message={`Are you sure you want to delete "${productToDelete?.name}"?`}
-        onCancel={() => setProductToDelete(undefined)}
-        onConfirm={async () => {
-          if (!productToDelete) return;
+                setProductToDelete(
+                  undefined
+                );
+              } catch (error) {
+                const message =
+                  error instanceof Error
+                    ? error.message
+                    : "Unable to delete product.";
 
-          try {
-            await removeProduct(productToDelete.id);
-
-            showToast("Product deleted successfully.");
-            setProductToDelete(undefined);
-          } catch (error) {
-            const message =
-              error instanceof Error
-                ? error.message
-                : "Unable to delete product.";
-
-            showToast(message, "error");
-          }
-        }}
-      />
+                showToast(
+                  message,
+                  "error"
+                );
+              }
+            }}
+          />
+        </>
+      )}
 
       {toastMessage && (
         <Toast

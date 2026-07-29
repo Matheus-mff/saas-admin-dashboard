@@ -7,12 +7,14 @@ import { Product } from "@/types/product";
 
 type ProductTableProps = {
   products: Product[];
+  canManage: boolean;
   onEdit: (product: Product) => void;
   onDelete: (product: Product) => void;
 };
 
 export default function ProductTable({
   products,
+  canManage,
   onEdit,
   onDelete,
 }: ProductTableProps) {
@@ -38,59 +40,76 @@ export default function ProductTable({
                 Stock
               </th>
 
-              <th className="px-6 py-3 text-left">
-                Actions
-              </th>
+              {canManage && (
+                <th className="px-6 py-3 text-left">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
 
           <tbody>
-            {products.map((product) => (
-              <tr
-                key={product.id}
-                className="table-row"
-              >
-                <td className="px-6 py-4">
-                  {product.id}
-                </td>
+            {products.map(
+              (product) => (
+                <tr
+                  key={product.id}
+                  className="table-row"
+                >
+                  <td className="px-6 py-4">
+                    {product.id}
+                  </td>
 
-                <td className="px-6 py-4 font-medium">
-                  {product.name}
-                </td>
+                  <td className="px-6 py-4 font-medium">
+                    {product.name}
+                  </td>
 
-                <td className="px-6 py-4">
-                  ${product.price.toLocaleString()}
-                </td>
+                  <td className="px-6 py-4">
+                    $
+                    {product.price.toLocaleString()}
+                  </td>
 
-                <td className="px-6 py-4">
-                  {product.stock}
-                </td>
+                  <td className="px-6 py-4">
+                    {product.stock}
+                  </td>
 
-                <td className="px-6 py-4">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() =>
-                        onEdit(product)
-                      }
-                      className="icon-button"
-                      aria-label="Edit product"
-                    >
-                      <Pencil size={18} />
-                    </button>
+                  {canManage && (
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onEdit(
+                              product
+                            )
+                          }
+                          className="icon-button"
+                          aria-label={`Edit ${product.name}`}
+                        >
+                          <Pencil
+                            size={18}
+                          />
+                        </button>
 
-                    <button
-                      onClick={() =>
-                        onDelete(product)
-                      }
-                      className="icon-button danger-icon-button"
-                      aria-label="Delete product"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onDelete(
+                              product
+                            )
+                          }
+                          className="icon-button danger-icon-button"
+                          aria-label={`Delete ${product.name}`}
+                        >
+                          <Trash2
+                            size={18}
+                          />
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              )
+            )}
           </tbody>
         </table>
       </div>

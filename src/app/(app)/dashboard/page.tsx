@@ -6,9 +6,14 @@ import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton/Dashboar
 import RecentOrders from "@/components/dashboard/RecentOrders/RecentOrders";
 import StatCard from "@/components/dashboard/StatCard/StatCard";
 import ErrorState from "@/components/ui/ErrorState/ErrorState";
+
+import { useCurrentUser } from "@/contexts/CurrentUserContext";
+
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 
 export default function DashboardPage() {
+  const { user } = useCurrentUser();
+
   const {
     data,
     loading,
@@ -40,14 +45,19 @@ export default function DashboardPage() {
     recentOrders,
   } = data;
 
+  const firstName =
+    user.name.trim().split(/\s+/)[0] ||
+    "there";
+
   return (
     <div>
       <h1 className="text-3xl font-bold">
-        Welcome back, Matheus 👋
+        Welcome back, {firstName} 👋
       </h1>
 
       <p className="mt-2 muted-text">
-        {"Here's what's happening today."}
+        Here&apos;s what&apos;s happening in your
+        workspace.
       </p>
 
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
@@ -63,7 +73,13 @@ export default function DashboardPage() {
 
         <StatCard
           title="Revenue"
-          value={`$${stats.totalRevenue.toLocaleString()}`}
+          value={`$${stats.totalRevenue.toLocaleString(
+            "en-US",
+            {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }
+          )}`}
         />
 
         <StatCard

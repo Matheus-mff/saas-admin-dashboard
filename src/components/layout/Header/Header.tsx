@@ -1,5 +1,4 @@
 import {
-  Bell,
   LogOut,
   Menu,
 } from "lucide-react";
@@ -8,6 +7,7 @@ import { logout } from "@/app/(app)/actions";
 
 import { UserRole } from "@/constants/userRoles";
 
+import NotificationBell from "@/components/ui/NotificationBell/NotificationBell";
 import ThemeToggle from "@/components/ui/ThemeToggle/ThemeToggle";
 
 type HeaderProps = {
@@ -20,7 +20,10 @@ type HeaderProps = {
   };
 };
 
-const roleLabels: Record<UserRole, string> = {
+const roleLabels: Record<
+  UserRole,
+  string
+> = {
   Admin: "Administrator",
   Manager: "Manager",
   User: "User",
@@ -37,12 +40,16 @@ function getInitials(name: string) {
   }
 
   if (nameParts.length === 1) {
-    return nameParts[0].charAt(0).toUpperCase();
+    return nameParts[0]
+      .charAt(0)
+      .toUpperCase();
   }
 
   return (
     nameParts[0].charAt(0) +
-    nameParts[nameParts.length - 1].charAt(0)
+    nameParts[
+      nameParts.length - 1
+    ].charAt(0)
   ).toUpperCase();
 }
 
@@ -50,8 +57,12 @@ export default function Header({
   onMenuClick,
   user,
 }: HeaderProps) {
-  const initials = getInitials(user.name);
-  const roleLabel = roleLabels[user.role];
+  const initials = getInitials(
+    user.name
+  );
+
+  const roleLabel =
+    roleLabels[user.role];
 
   return (
     <header className="navigation-surface flex h-16 items-center justify-between border-b px-4 sm:px-6 lg:px-8">
@@ -73,13 +84,7 @@ export default function Header({
       <div className="flex items-center gap-2 sm:gap-4">
         <ThemeToggle />
 
-        <button
-          type="button"
-          className="icon-button"
-          aria-label="Notifications"
-        >
-          <Bell size={20} />
-        </button>
+        <NotificationBell />
 
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 font-semibold text-white">

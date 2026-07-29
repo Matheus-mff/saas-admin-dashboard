@@ -59,6 +59,15 @@ export const {
             where: {
               email,
             },
+
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              passwordHash: true,
+              workspaceId: true,
+            },
           });
 
         if (!user?.passwordHash) {
@@ -80,6 +89,7 @@ export const {
           name: user.name,
           email: user.email,
           role: user.role,
+          workspaceId: user.workspaceId,
         };
       },
     }),
@@ -90,6 +100,8 @@ export const {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.workspaceId =
+          user.workspaceId;
       }
 
       return token;
@@ -120,6 +132,7 @@ export const {
             name: true,
             email: true,
             role: true,
+            workspaceId: true,
           },
         });
 
@@ -138,6 +151,9 @@ export const {
 
       session.user.role =
         currentUser.role;
+
+      session.user.workspaceId =
+        currentUser.workspaceId;
 
       return session;
     },

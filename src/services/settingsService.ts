@@ -1,9 +1,18 @@
-import { Settings } from "@/types/settings";
+import {
+  Settings,
+  SettingsInput,
+} from "@/types/settings";
 
 import { getApiErrorMessage } from "@/utils/getApiErrorMessage";
 
 export async function getSettings(): Promise<Settings> {
-  const response = await fetch("/api/settings");
+  const response = await fetch(
+    "/api/settings",
+    {
+      method: "GET",
+      cache: "no-store",
+    }
+  );
 
   if (!response.ok) {
     throw new Error(
@@ -18,17 +27,20 @@ export async function getSettings(): Promise<Settings> {
 }
 
 export async function updateSettings(
-  settings: Settings
+  settings: SettingsInput
 ): Promise<Settings> {
-  const response = await fetch("/api/settings", {
-    method: "PATCH",
+  const response = await fetch(
+    "/api/settings",
+    {
+      method: "PATCH",
 
-    headers: {
-      "Content-Type": "application/json",
-    },
+      headers: {
+        "Content-Type": "application/json",
+      },
 
-    body: JSON.stringify(settings),
-  });
+      body: JSON.stringify(settings),
+    }
+  );
 
   if (!response.ok) {
     throw new Error(

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import {
-  requireAdmin,
   requireAuthenticatedUser,
+  requireManagerOrAdmin,
 } from "@/lib/apiAuth";
 
 import { prisma } from "@/lib/prisma";
@@ -13,7 +13,9 @@ type CreateProductBody = {
   stock?: unknown;
 };
 
-function parseNumber(value: unknown): number | null {
+function parseNumber(
+  value: unknown
+): number | null {
   if (
     typeof value !== "number" ||
     !Number.isFinite(value)
@@ -35,12 +37,20 @@ export async function GET() {
   try {
     const products =
       await prisma.product.findMany({
+        where: {
+          workspaceId:
+            authResult.session.user
+              .workspaceId,
+        },
+
         orderBy: {
           createdAt: "desc",
         },
       });
 
-    return NextResponse.json(products);
+    return NextResponse.json(
+      products
+    );
   } catch (error) {
     console.error(
       "GET /api/products failed:",
@@ -49,7 +59,8 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        message: "Unable to load products.",
+        message:
+          "Unable to load products.",
       },
       {
         status: 500,
@@ -58,8 +69,11 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
-  const authResult = await requireAdmin();
+export async function POST(
+  request: Request
+) {
+  const authResult =
+    await requireManagerOrAdmin();
 
   if (authResult.response) {
     return authResult.response;
@@ -74,8 +88,11 @@ export async function POST(request: Request) {
         ? body.name.trim()
         : "";
 
-    const price = parseNumber(body.price);
-    const stock = parseNumber(body.stock);
+    const price =
+      parseNumber(body.price);
+
+    const stock =
+      parseNumber(body.stock);
 
     if (!name) {
       return NextResponse.json(
@@ -89,7 +106,10 @@ export async function POST(request: Request) {
       );
     }
 
-    if (price === null || price <= 0) {
+    if (
+      price === null ||
+      price <= 0
+    ) {
       return NextResponse.json(
         {
           message:
@@ -123,12 +143,19 @@ export async function POST(request: Request) {
           name,
           price,
           stock,
+
+          workspaceId:
+            authResult.session.user
+              .workspaceId,
         },
       });
 
-    return NextResponse.json(newProduct, {
-      status: 201,
-    });
+    return NextResponse.json(
+      newProduct,
+      {
+        status: 201,
+      }
+    );
   } catch (error) {
     console.error(
       "POST /api/products failed:",

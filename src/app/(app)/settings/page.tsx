@@ -1,10 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import { useRouter } from "next/navigation";
 
+import ChangePasswordForm from "@/components/forms/ChangePasswordForm/ChangePasswordForm";
 import SettingsForm from "@/components/forms/SettingsForm/SettingsForm";
+import ErrorState from "@/components/ui/ErrorState/ErrorState";
 import Toast from "@/components/ui/Toast/Toast";
+
+import { useCurrentUser } from "@/contexts/CurrentUserContext";
 
 import { useToast } from "@/hooks/useToast";
 
@@ -18,6 +26,9 @@ import { Settings } from "@/types/settings";
 export default function SettingsPage() {
   const router = useRouter();
 
+  const { isAdmin } =
+    useCurrentUser();
+
   const {
     toastMessage,
     toastType,
@@ -27,39 +38,86 @@ export default function SettingsPage() {
   const [settings, setSettings] =
     useState<Settings | null>(null);
 
-  const [errorMessage, setErrorMessage] =
-    useState("");
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] = useState("");
 
   const [isLoading, setIsLoading] =
     useState(true);
 
   useEffect(() => {
-    async function loadSettings() {
+    let isCancelled = false;
+
+    async function loadInitialSettings() {
       try {
         const loadedSettings =
           await getSettings();
 
-        setSettings(loadedSettings);
+        if (!isCancelled) {
+          setSettings(
+            loadedSettings
+          );
+        }
       } catch (error) {
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Unable to load settings."
-        );
+        if (!isCancelled) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : "Unable to load settings."
+          );
+        }
       } finally {
-        setIsLoading(false);
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
       }
     }
 
-    loadSettings();
+    void loadInitialSettings();
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
+
+  async function retryLoading() {
+    setErrorMessage("");
+    setIsLoading(true);
+
+    try {
+      const loadedSettings =
+        await getSettings();
+
+      setSettings(loadedSettings);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to load settings."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   async function handleSave(
     newSettings: Settings
   ): Promise<string | null> {
     try {
       const savedSettings =
-        await updateSettings(newSettings);
+        await updateSettings({
+          name: newSettings.name,
+          email: newSettings.email,
+
+          emailNotifications:
+            newSettings.emailNotifications,
+
+          ...(isAdmin && {
+            company:
+              newSettings.company,
+          }),
+        });
 
       setSettings(savedSettings);
 
@@ -89,31 +147,44 @@ export default function SettingsPage() {
 
       <div className="mt-8">
         {isLoading && (
-          <div className="card p-6">
+          <div
+            className="card p-6"
+            aria-live="polite"
+          >
             <p className="muted-text">
               Loading settings...
             </p>
           </div>
         )}
 
-        {!isLoading && errorMessage && (
-          <div className="card p-6">
-            <p
-              className="text-red-500"
-              role="alert"
-            >
-              {errorMessage}
-            </p>
-          </div>
-        )}
+        {!isLoading &&
+          errorMessage && (
+            <ErrorState
+              message={errorMessage}
+              onRetry={retryLoading}
+            />
+          )}
 
         {!isLoading &&
           !errorMessage &&
           settings && (
-            <SettingsForm
-              initialValues={settings}
-              onSave={handleSave}
-            />
+            <div className="space-y-8">
+              <SettingsForm
+                initialValues={
+                  settings
+                }
+                canManageWorkspace={
+                  isAdmin
+                }
+                onSave={handleSave}
+              />
+
+              <ChangePasswordForm
+                onSuccess={
+                  showToast
+                }
+              />
+            </div>
           )}
       </div>
 

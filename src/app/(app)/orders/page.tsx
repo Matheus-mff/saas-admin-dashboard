@@ -15,17 +15,30 @@ import {
   OrderStatusFilter,
 } from "@/constants/orderStatuses";
 
+import { useCurrentUser } from "@/contexts/CurrentUserContext";
+
 import { useOrders } from "@/hooks/useOrders";
 import { useToast } from "@/hooks/useToast";
 
 import { Order } from "@/types/order";
 
 export default function OrdersPage() {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] =
+  const { canManageOperations } =
+    useCurrentUser();
+
+  const [search, setSearch] =
+    useState("");
+
+  const [
+    statusFilter,
+    setStatusFilter,
+  ] =
     useState<OrderStatusFilter>("All");
-  const [selectedOrder, setSelectedOrder] =
-    useState<Order | undefined>();
+
+  const [
+    selectedOrder,
+    setSelectedOrder,
+  ] = useState<Order | undefined>();
 
   const {
     toastMessage,
@@ -45,21 +58,25 @@ export default function OrdersPage() {
     .trim()
     .toLowerCase();
 
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.customer
-        .toLowerCase()
-        .includes(normalizedSearch) ||
-      order.id
-        .toString()
-        .includes(normalizedSearch);
+  const filteredOrders =
+    orders.filter((order) => {
+      const matchesSearch =
+        order.customer
+          .toLowerCase()
+          .includes(normalizedSearch) ||
+        order.id
+          .toString()
+          .includes(normalizedSearch);
 
-    const matchesStatus =
-      statusFilter === "All" ||
-      order.status === statusFilter;
+      const matchesStatus =
+        statusFilter === "All" ||
+        order.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
-  });
+      return (
+        matchesSearch &&
+        matchesStatus
+      );
+    });
 
   if (loading) {
     return <TableSkeleton />;
@@ -74,6 +91,9 @@ export default function OrdersPage() {
     );
   }
 
+  const hasOrders =
+    orders.length > 0;
+
   return (
     <div>
       <h1 className="text-3xl font-bold">
@@ -81,42 +101,59 @@ export default function OrdersPage() {
       </h1>
 
       <p className="mt-2 muted-text">
-        View and manage customer orders.
+        {canManageOperations
+          ? "View and manage customer orders."
+          : "View customer orders in your workspace."}
       </p>
 
-      <div className="mt-8 flex flex-col gap-4">
-        <div className="flex flex-wrap gap-2">
-          {ORDER_STATUS_FILTERS.map((status) => (
-            <button
-              key={status}
-              type="button"
-              onClick={() =>
-                setStatusFilter(status)
-              }
-              className={
-                statusFilter === status
-                  ? "primary-button"
-                  : "secondary-button"
-              }
-            >
-              {status}
-            </button>
-          ))}
-        </div>
+      {hasOrders && (
+        <div className="mt-8 flex flex-col gap-4">
+          <div className="flex flex-wrap gap-2">
+            {ORDER_STATUS_FILTERS.map(
+              (status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() =>
+                    setStatusFilter(
+                      status
+                    )
+                  }
+                  className={
+                    statusFilter ===
+                      status
+                      ? "primary-button"
+                      : "secondary-button"
+                  }
+                >
+                  {status}
+                </button>
+              )
+            )}
+          </div>
 
-        <input
-          type="search"
-          placeholder="Search by customer or order ID..."
-          value={search}
-          onChange={(e) =>
-            setSearch(e.target.value)
-          }
-          className="form-control"
-        />
-      </div>
+          <input
+            type="search"
+            placeholder="Search by customer or order ID..."
+            value={search}
+            onChange={(event) =>
+              setSearch(
+                event.target.value
+              )
+            }
+            className="form-control"
+          />
+        </div>
+      )}
 
       <div className="mt-6">
-        {filteredOrders.length === 0 ? (
+        {orders.length === 0 ? (
+          <EmptyState
+            title="No orders yet"
+            description="Orders will appear here when customers place them."
+          />
+        ) : filteredOrders.length ===
+          0 ? (
           <EmptyState
             title="No orders found"
             description="Try another search or filter."
@@ -132,7 +169,7 @@ export default function OrdersPage() {
       </div>
 
       <Modal
-        open={!!selectedOrder}
+        open={Boolean(selectedOrder)}
         title="Order Details"
         onClose={() =>
           setSelectedOrder(undefined)
@@ -141,7 +178,12 @@ export default function OrdersPage() {
         {selectedOrder && (
           <OrderDetails
             order={selectedOrder}
-            onStatusChange={async (status) => {
+            canManage={
+              canManageOperations
+            }
+            onStatusChange={async (
+              status
+            ) => {
               try {
                 const updatedOrder =
                   await changeOrderStatus(
@@ -149,7 +191,9 @@ export default function OrdersPage() {
                     status
                   );
 
-                setSelectedOrder(updatedOrder);
+                setSelectedOrder(
+                  updatedOrder
+                );
 
                 showToast(
                   "Order status updated successfully."
@@ -160,7 +204,10 @@ export default function OrdersPage() {
                     ? error.message
                     : "Unable to update order status.";
 
-                showToast(message, "error");
+                showToast(
+                  message,
+                  "error"
+                );
               }
             }}
           />

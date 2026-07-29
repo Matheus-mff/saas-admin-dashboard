@@ -1,19 +1,20 @@
+import { OrderStatus } from "@/constants/orderStatuses";
+
 import { Order } from "@/types/order";
+
 import { getApiErrorMessage } from "@/utils/getApiErrorMessage";
+import { notifyDashboardDataChanged } from "@/utils/dashboardEvents";
 
 export async function getOrders(): Promise<Order[]> {
-  const response = await fetch("/api/orders", {
-    method: "GET",
-    cache: "no-store",
-  });
+  const response = await fetch("/api/orders");
 
   if (!response.ok) {
-    const message = await getApiErrorMessage(
-      response,
-      "Unable to load orders."
+    throw new Error(
+      await getApiErrorMessage(
+        response,
+        "Unable to load orders."
+      )
     );
-
-    throw new Error(message);
   }
 
   return response.json();
@@ -21,28 +22,36 @@ export async function getOrders(): Promise<Order[]> {
 
 export async function updateOrderStatus(
   id: number,
-  status: Order["status"]
+  status: OrderStatus
 ): Promise<Order> {
-  const response = await fetch(`/api/orders/${id}`, {
-    method: "PATCH",
+  const response = await fetch(
+    `/api/orders/${id}`,
+    {
+      method: "PATCH",
 
-    headers: {
-      "Content-Type": "application/json",
-    },
+      headers: {
+        "Content-Type": "application/json",
+      },
 
-    body: JSON.stringify({
-      status,
-    }),
-  });
+      body: JSON.stringify({
+        status,
+      }),
+    }
+  );
 
   if (!response.ok) {
-    const message = await getApiErrorMessage(
-      response,
-      "Unable to update order status."
+    throw new Error(
+      await getApiErrorMessage(
+        response,
+        "Unable to update order status."
+      )
     );
-
-    throw new Error(message);
   }
 
-  return response.json();
+  const updatedOrder: Order =
+    await response.json();
+
+  notifyDashboardDataChanged();
+
+  return updatedOrder;
 }
