@@ -6,8 +6,8 @@ import { Pool } from "pg";
 
 import {
   PrismaClient,
+  SubscriptionStatus,
   UserRole,
-  OrderStatus,
 } from "../src/generated/prisma/client";
 
 const connectionString =
@@ -29,9 +29,27 @@ const prisma = new PrismaClient({
   adapter,
 });
 
+type TransactionSeed = {
+  amount: number;
+  status:
+  | "Pending"
+  | "Paid"
+  | "Failed"
+  | "Refunded";
+  subscriptionId: number;
+  workspaceId: number;
+  paidAt: Date | null;
+  createdAt: Date;
+};
+
 async function main() {
-  await prisma.order.deleteMany();
-  await prisma.product.deleteMany();
+  /*
+    Delete records that depend on other models first.
+  */
+  await prisma.transaction.deleteMany();
+  await prisma.subscription.deleteMany();
+  await prisma.customer.deleteMany();
+  await prisma.plan.deleteMany();
   await prisma.user.deleteMany();
   await prisma.workspace.deleteMany();
 
@@ -43,10 +61,13 @@ async function main() {
     });
 
   const demoPasswordHash = await hash(
-    "admin123",
+    "AdminDemo2026!",
     12
   );
 
+  /*
+    Internal team members.
+  */
   const users = [
     {
       name: "Demo Admin",
@@ -153,238 +174,672 @@ async function main() {
     })),
   });
 
-  const products = [
+  /*
+    SaaS subscription plans.
+  */
+  const starterPlan =
+    await prisma.plan.create({
+      data: {
+        name: "Starter",
+        monthlyPrice: 29,
+        workspaceId: demoWorkspace.id,
+      },
+    });
+
+  const professionalPlan =
+    await prisma.plan.create({
+      data: {
+        name: "Professional",
+        monthlyPrice: 79,
+        workspaceId: demoWorkspace.id,
+      },
+    });
+
+  const businessPlan =
+    await prisma.plan.create({
+      data: {
+        name: "Business",
+        monthlyPrice: 149,
+        workspaceId: demoWorkspace.id,
+      },
+    });
+
+  const enterprisePlan =
+    await prisma.plan.create({
+      data: {
+        name: "Enterprise",
+        monthlyPrice: 299,
+        workspaceId: demoWorkspace.id,
+      },
+    });
+
+  /*
+    Customers join throughout the historical period.
+
+    Every customer is created before their
+    subscription starts.
+  */
+  const customers = [
     {
-      name: "Starter Plan",
-      price: 29,
-      stock: 120,
+      name: "Emily Carter",
+      email: "emily@northstarlabs.com",
+      company: "Northstar Labs",
+      createdAt: new Date(
+        "2026-03-01T14:00:00Z"
+      ),
     },
     {
-      name: "Professional Plan",
-      price: 79,
-      stock: 85,
+      name: "Daniel Brooks",
+      email: "daniel@pixelbridge.io",
+      company: "PixelBridge",
+      createdAt: new Date(
+        "2026-03-13T15:30:00Z"
+      ),
     },
     {
-      name: "Business Plan",
-      price: 149,
-      stock: 62,
+      name: "Rachel Adams",
+      email: "rachel@brightpath.co",
+      company: "BrightPath",
+      createdAt: new Date(
+        "2026-03-29T11:00:00Z"
+      ),
     },
     {
-      name: "Enterprise Plan",
-      price: 299,
-      stock: 18,
+      name: "Michael Turner",
+      email: "michael@cloudnest.io",
+      company: "CloudNest",
+      createdAt: new Date(
+        "2026-04-08T16:00:00Z"
+      ),
     },
     {
-      name: "Analytics Add-on",
-      price: 39,
-      stock: 75,
+      name: "Jessica Reed",
+      email: "jessica@orbitworks.com",
+      company: "OrbitWorks",
+      createdAt: new Date(
+        "2026-04-21T10:30:00Z"
+      ),
     },
     {
-      name: "Priority Support",
-      price: 59,
-      stock: 40,
+      name: "Andrew Collins",
+      email: "andrew@novaforge.dev",
+      company: "NovaForge",
+      createdAt: new Date(
+        "2026-05-01T13:00:00Z"
+      ),
     },
     {
-      name: "Team Collaboration",
-      price: 49,
-      stock: 94,
+      name: "Laura Bennett",
+      email: "laura@vertexlabs.io",
+      company: "Vertex Labs",
+      createdAt: new Date(
+        "2026-05-12T12:00:00Z"
+      ),
     },
     {
-      name: "Advanced Reports",
-      price: 69,
-      stock: 53,
+      name: "Christopher Hall",
+      email: "christopher@lumina.dev",
+      company: "Lumina",
+      createdAt: new Date(
+        "2026-05-23T15:00:00Z"
+      ),
     },
     {
-      name: "Cloud Storage 100 GB",
-      price: 19,
-      stock: 140,
+      name: "Natalie Cooper",
+      email: "natalie@apexflow.io",
+      company: "ApexFlow",
+      createdAt: new Date(
+        "2026-05-28T09:30:00Z"
+      ),
     },
     {
-      name: "Cloud Storage 1 TB",
-      price: 99,
-      stock: 67,
+      name: "Matthew Green",
+      email: "matthew@summitstack.com",
+      company: "SummitStack",
+      createdAt: new Date(
+        "2026-06-04T14:30:00Z"
+      ),
     },
     {
-      name: "Custom Branding",
-      price: 89,
-      stock: 31,
+      name: "Samantha Baker",
+      email: "samantha@bluepeak.io",
+      company: "BluePeak",
+      createdAt: new Date(
+        "2026-06-12T11:30:00Z"
+      ),
     },
     {
-      name: "API Access",
-      price: 129,
-      stock: 24,
+      name: "Ryan Mitchell",
+      email: "ryan@launchgrid.dev",
+      company: "LaunchGrid",
+      createdAt: new Date(
+        "2026-06-21T16:00:00Z"
+      ),
+    },
+    {
+      name: "Hannah Parker",
+      email: "hannah@clearwave.io",
+      company: "ClearWave",
+      createdAt: new Date(
+        "2026-06-28T13:30:00Z"
+      ),
+    },
+    {
+      name: "Joshua Evans",
+      email: "joshua@corelink.dev",
+      company: "CoreLink",
+      createdAt: new Date(
+        "2026-07-03T10:00:00Z"
+      ),
+    },
+    {
+      name: "Nicole Edwards",
+      email: "nicole@nextlayer.io",
+      company: "NextLayer",
+      createdAt: new Date(
+        "2026-07-08T15:00:00Z"
+      ),
+    },
+    {
+      name: "Brandon Scott",
+      email: "brandon@quantumdesk.com",
+      company: "QuantumDesk",
+      createdAt: new Date(
+        "2026-07-15T12:00:00Z"
+      ),
+    },
+    {
+      name: "Grace Morris",
+      email: "grace@velocityhub.io",
+      company: "VelocityHub",
+      createdAt: new Date(
+        "2026-07-22T14:00:00Z"
+      ),
+    },
+    {
+      name: "Kevin Rogers",
+      email: "kevin@streamline.dev",
+      company: "Streamline",
+      createdAt: new Date(
+        "2026-07-28T11:00:00Z"
+      ),
+    },
+    {
+      name: "Victoria Cook",
+      email: "victoria@zenithapps.com",
+      company: "Zenith Apps",
+      createdAt: new Date(
+        "2026-07-30T15:00:00Z"
+      ),
+    },
+    {
+      name: "Justin Morgan",
+      email: "justin@framebase.io",
+      company: "FrameBase",
+      createdAt: new Date(
+        "2026-08-01T10:30:00Z"
+      ),
+    },
+    {
+      name: "Rebecca Bell",
+      email: "rebecca@signalcraft.dev",
+      company: "SignalCraft",
+      createdAt: new Date(
+        "2026-08-03T14:30:00Z"
+      ),
+    },
+    {
+      name: "Aaron Murphy",
+      email: "aaron@elevatecloud.io",
+      company: "Elevate Cloud",
+      createdAt: new Date(
+        "2026-08-05T09:00:00Z"
+      ),
+    },
+    {
+      name: "Megan Bailey",
+      email: "megan@prismtech.dev",
+      company: "PrismTech",
+      createdAt: new Date(
+        "2026-08-07T13:00:00Z"
+      ),
+    },
+    {
+      name: "Eric Rivera",
+      email: "eric@vectorlabs.io",
+      company: "Vector Labs",
+      createdAt: new Date(
+        "2026-08-09T16:00:00Z"
+      ),
     },
   ];
 
-  await prisma.product.createMany({
-    data: products.map((product) => ({
-      ...product,
-      workspaceId: demoWorkspace.id,
-    })),
+  const createdCustomers =
+    await Promise.all(
+      customers.map((customer) =>
+        prisma.customer.create({
+          data: {
+            ...customer,
+            workspaceId:
+              demoWorkspace.id,
+          },
+        })
+      )
+    );
+
+  /*
+    Historical subscription acquisition:
+
+    Mar: 2
+    Apr: 3
+    May: 3
+    Jun: 4
+    Jul: 5
+    Aug: 7
+
+    Total: 24
+  */
+  const subscriptionData = [
+    // March
+    {
+      customer: createdCustomers[0],
+      plan: professionalPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-03-04T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[1],
+      plan: starterPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-03-18T12:00:00Z"
+      ),
+    },
+
+    // April
+    {
+      customer: createdCustomers[2],
+      plan: businessPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-04-03T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[3],
+      plan: professionalPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-04-14T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[4],
+      plan: starterPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-04-26T12:00:00Z"
+      ),
+    },
+
+    // May
+    {
+      customer: createdCustomers[5],
+      plan: businessPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-05-05T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[6],
+      plan: professionalPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-05-17T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[7],
+      plan: enterprisePlan,
+      status:
+        SubscriptionStatus.Canceled,
+      startedAt: new Date(
+        "2026-05-28T12:00:00Z"
+      ),
+      canceledAt: new Date(
+        "2026-07-08T12:00:00Z"
+      ),
+    },
+
+    // June
+    {
+      customer: createdCustomers[8],
+      plan: professionalPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-06-02T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[9],
+      plan: businessPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-06-09T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[10],
+      plan: starterPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-06-18T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[11],
+      plan: professionalPlan,
+      status:
+        SubscriptionStatus.Canceled,
+      startedAt: new Date(
+        "2026-06-26T12:00:00Z"
+      ),
+      canceledAt: new Date(
+        "2026-07-29T12:00:00Z"
+      ),
+    },
+
+    // July
+    {
+      customer: createdCustomers[12],
+      plan: businessPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-07-02T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[13],
+      plan: starterPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-07-07T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[14],
+      plan: professionalPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-07-13T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[15],
+      plan: enterprisePlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-07-20T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[16],
+      plan: professionalPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-07-27T12:00:00Z"
+      ),
+    },
+
+    // August
+    {
+      customer: createdCustomers[17],
+      plan: businessPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-08-01T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[18],
+      plan: starterPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-08-03T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[19],
+      plan: professionalPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-08-05T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[20],
+      plan: businessPlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-08-07T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[21],
+      plan: starterPlan,
+      status:
+        SubscriptionStatus.Trialing,
+      startedAt: new Date(
+        "2026-08-09T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[22],
+      plan: professionalPlan,
+      status:
+        SubscriptionStatus.Trialing,
+      startedAt: new Date(
+        "2026-08-10T12:00:00Z"
+      ),
+    },
+    {
+      customer: createdCustomers[23],
+      plan: enterprisePlan,
+      status: SubscriptionStatus.Active,
+      startedAt: new Date(
+        "2026-08-11T12:00:00Z"
+      ),
+    },
+  ];
+
+  const createdSubscriptions =
+    await Promise.all(
+      subscriptionData.map(
+        ({
+          customer,
+          plan,
+          status,
+          startedAt,
+          canceledAt,
+        }) =>
+          prisma.subscription.create({
+            data: {
+              customerId: customer.id,
+              planId: plan.id,
+              status,
+              startedAt,
+              canceledAt,
+              workspaceId:
+                demoWorkspace.id,
+            },
+
+            include: {
+              plan: true,
+            },
+          })
+      )
+    );
+
+  /*
+    Generate recurring monthly payments.
+
+    Trial subscriptions do not generate
+    successful revenue yet.
+  */
+  const transactionData: TransactionSeed[] =
+    [];
+
+  const seedEndDate = new Date(
+    "2026-08-12T23:59:59Z"
+  );
+
+  createdSubscriptions.forEach(
+    (subscription) => {
+      if (
+        subscription.status ===
+        SubscriptionStatus.Trialing
+      ) {
+        return;
+      }
+
+      const billingDate = new Date(
+        subscription.startedAt
+      );
+
+      const subscriptionEndDate =
+        subscription.canceledAt ??
+        seedEndDate;
+
+      while (
+        billingDate <=
+        subscriptionEndDate
+      ) {
+        transactionData.push({
+          amount:
+            subscription.plan
+              .monthlyPrice,
+
+          status: "Paid",
+
+          subscriptionId:
+            subscription.id,
+
+          workspaceId:
+            demoWorkspace.id,
+
+          paidAt: new Date(
+            billingDate
+          ),
+
+          createdAt: new Date(
+            billingDate
+          ),
+        });
+
+        billingDate.setUTCMonth(
+          billingDate.getUTCMonth() +
+          1
+        );
+      }
+    }
+  );
+
+  /*
+    Payment edge cases.
+  */
+
+  const pendingSubscription =
+    createdSubscriptions[22];
+
+  transactionData.push({
+    amount:
+      pendingSubscription.plan
+        .monthlyPrice,
+
+    status: "Pending",
+
+    subscriptionId:
+      pendingSubscription.id,
+
+    workspaceId:
+      demoWorkspace.id,
+
+    paidAt: null,
+
+    createdAt: new Date(
+      "2026-08-11T12:00:00Z"
+    ),
   });
 
-  const orders = [
-    {
-      customer: "John Doe",
-      total: 79,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Alice Smith",
-      total: 149,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Bob Wilson",
-      total: 29,
-      status: OrderStatus.Pending,
-    },
-    {
-      customer: "Emma Brown",
-      total: 299,
-      status: OrderStatus.Processing,
-    },
-    {
-      customer: "Liam Johnson",
-      total: 118,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Olivia Davis",
-      total: 59,
-      status: OrderStatus.Pending,
-    },
-    {
-      customer: "Noah Miller",
-      total: 198,
-      status: OrderStatus.Processing,
-    },
-    {
-      customer: "Ava Anderson",
-      total: 49,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Ethan Taylor",
-      total: 328,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Sophia Thomas",
-      total: 89,
-      status: OrderStatus.Pending,
-    },
-    {
-      customer: "Mason Moore",
-      total: 149,
-      status: OrderStatus.Processing,
-    },
-    {
-      customer: "Isabella Martin",
-      total: 39,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Lucas Jackson",
-      total: 99,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Mia White",
-      total: 188,
-      status: OrderStatus.Pending,
-    },
-    {
-      customer: "James Harris",
-      total: 69,
-      status: OrderStatus.Processing,
-    },
-    {
-      customer: "Charlotte Clark",
-      total: 299,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Benjamin Lewis",
-      total: 108,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Amelia Walker",
-      total: 29,
-      status: OrderStatus.Pending,
-    },
-    {
-      customer: "John Doe",
-      total: 168,
-      status: OrderStatus.Processing,
-    },
-    {
-      customer: "Alice Smith",
-      total: 59,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Bob Wilson",
-      total: 99,
-      status: OrderStatus.Pending,
-    },
-    {
-      customer: "Emma Brown",
-      total: 218,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Liam Johnson",
-      total: 49,
-      status: OrderStatus.Processing,
-    },
-    {
-      customer: "Olivia Davis",
-      total: 129,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Noah Miller",
-      total: 79,
-      status: OrderStatus.Pending,
-    },
-    {
-      customer: "Ava Anderson",
-      total: 388,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Ethan Taylor",
-      total: 39,
-      status: OrderStatus.Processing,
-    },
-    {
-      customer: "Sophia Thomas",
-      total: 148,
-      status: OrderStatus.Completed,
-    },
-    {
-      customer: "Mason Moore",
-      total: 89,
-      status: OrderStatus.Pending,
-    },
-    {
-      customer: "Isabella Martin",
-      total: 299,
-      status: OrderStatus.Completed,
-    },
-  ];
+  const failedSubscription =
+    createdSubscriptions[14];
 
-  await prisma.order.createMany({
-    data: orders.map((order) => ({
-      ...order,
-      workspaceId: demoWorkspace.id,
-    })),
+  transactionData.push({
+    amount:
+      failedSubscription.plan
+        .monthlyPrice,
+
+    status: "Failed",
+
+    subscriptionId:
+      failedSubscription.id,
+
+    workspaceId:
+      demoWorkspace.id,
+
+    paidAt: null,
+
+    createdAt: new Date(
+      "2026-08-06T12:00:00Z"
+    ),
+  });
+
+  const refundedSubscription =
+    createdSubscriptions[6];
+
+  transactionData.push({
+    amount:
+      refundedSubscription.plan
+        .monthlyPrice,
+
+    status: "Refunded",
+
+    subscriptionId:
+      refundedSubscription.id,
+
+    workspaceId:
+      demoWorkspace.id,
+
+    paidAt: new Date(
+      "2026-07-18T12:00:00Z"
+    ),
+
+    createdAt: new Date(
+      "2026-07-18T12:00:00Z"
+    ),
+  });
+
+  await prisma.transaction.createMany({
+    data: transactionData,
   });
 
   console.log(
     `Database seeded successfully. Demo workspace ID: ${demoWorkspace.id}`
+  );
+
+  console.log(
+    `Created ${createdCustomers.length} customers.`
+  );
+
+  console.log(
+    `Created ${createdSubscriptions.length} subscriptions.`
+  );
+
+  console.log(
+    `Created ${transactionData.length} transactions.`
   );
 }
 

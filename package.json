@@ -11,7 +11,9 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "@remixicon/react": "^4.9.0",
     "bcryptjs": "^3.0.3",
+    "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "lucide-react": "^1.24.0",
     "next": "16.2.10",
@@ -20,6 +22,8 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "recharts": "^3.10.0",
+    "tailwind-merge": "^3.6.0",
+    "tailwind-variants": "^3.3.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

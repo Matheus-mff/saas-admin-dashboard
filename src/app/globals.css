@@ -201,6 +201,11 @@ body {
   background: var(--surface-secondary);
 }
 
+.table-header th {
+  vertical-align: middle;
+  font-weight: 600;
+}
+
 .table-row {
   border-top: 1px solid var(--border);
   transition: background 150ms;
@@ -210,46 +215,148 @@ body {
   background: var(--hover);
 }
 
+.table-row td {
+  vertical-align: middle;
+}
+
 /* =========================
-   STATUS BADGES
+   ROLE BADGES
 ========================= */
 
-.status-badge {
-  display: inline-block;
+.role-badge {
+  display: inline-flex;
+  min-width: 5rem;
+  align-items: center;
+  justify-content: center;
   border-radius: 9999px;
+  background: #dbeafe;
+  color: #1d4ed8;
   padding: 0.25rem 0.75rem;
   font-size: 0.875rem;
   font-weight: 500;
 }
 
-.status-completed {
-  background: #dcfce7;
-  color: #15803d;
+.dark .role-badge {
+  background: rgb(30 64 175 / 0.4);
+  color: #93c5fd;
 }
 
-.status-processing {
+/* =========================
+   STATUS BADGES
+========================= */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.5rem;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  white-space: nowrap;
+}
+
+/* Subscription statuses */
+
+.status-active {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+
+.status-trialing {
   background: #dbeafe;
   color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.status-canceled {
+  background: #f3f4f6;
+  color: #4b5563;
+  border-color: #d1d5db;
+}
+
+/* Transaction statuses */
+
+.status-paid {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #bbf7d0;
 }
 
 .status-pending {
   background: #fef3c7;
   color: #b45309;
+  border-color: #fde68a;
 }
 
-.dark .status-completed {
+.status-failed {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.status-refunded {
+  background: #ede9fe;
+  color: #6d28d9;
+  border-color: #ddd6fe;
+}
+
+/* Dark mode */
+
+.dark .status-active,
+.dark .status-paid {
   background: rgb(20 83 45 / 0.5);
   color: #86efac;
+  border-color: #166534;
 }
 
-.dark .status-processing {
+.dark .status-trialing {
   background: rgb(30 64 175 / 0.4);
   color: #93c5fd;
+  border-color: #1e40af;
+}
+
+.dark .status-canceled {
+  background: rgb(55 65 81 / 0.6);
+  color: #d1d5db;
+  border-color: #4b5563;
 }
 
 .dark .status-pending {
   background: rgb(146 64 14 / 0.4);
   color: #fcd34d;
+  border-color: #92400e;
+}
+
+.dark .status-failed {
+  background: rgb(127 29 29 / 0.4);
+  color: #fca5a5;
+  border-color: #991b1b;
+}
+
+.dark .status-refunded {
+  background: rgb(76 29 149 / 0.4);
+  color: #c4b5fd;
+  border-color: #6d28d9;
+}
+
+/* =========================
+   CHARTS
+========================= */
+
+/*
+   Tremor/Recharts axis ticks use a gray that
+   is too dark in dark mode. Override all chart
+   axis values consistently here instead of
+   modifying the copied library components.
+*/
+
+.dark [tremor-id="tremor-raw"] .recharts-cartesian-axis-tick-value {
+  fill: #d1d5db !important;
 }
 
 /* =========================

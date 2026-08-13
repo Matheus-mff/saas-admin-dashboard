@@ -13,20 +13,29 @@ enum UserRole {
   User
 }
 
-enum OrderStatus {
+enum SubscriptionStatus {
+  Active
+  Trialing
+  Canceled
+}
+
+enum TransactionStatus {
   Pending
-  Processing
-  Completed
+  Paid
+  Failed
+  Refunded
 }
 
 model Workspace {
-  id        Int       @id @default(autoincrement())
-  name      String
-  users     User[]
-  products  Product[]
-  orders    Order[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id            Int            @id @default(autoincrement())
+  name          String
+  users         User[]
+  customers     Customer[]
+  plans         Plan[]
+  subscriptions Subscription[]
+  transactions  Transaction[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model User {
@@ -44,28 +53,70 @@ model User {
   @@index([workspaceId])
 }
 
-model Product {
-  id          Int       @id @default(autoincrement())
-  name        String
-  price       Float
-  stock       Int
-  workspaceId Int
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+model Customer {
+  id            Int            @id @default(autoincrement())
+  name          String
+  email         String
+  company       String?
+  workspaceId   Int
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  subscriptions Subscription[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([workspaceId])
+  @@unique([workspaceId, email])
 }
 
-model Order {
-  id          Int         @id @default(autoincrement())
-  customer    String
-  total       Float
-  status      OrderStatus
-  workspaceId Int
-  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+model Plan {
+  id            Int            @id @default(autoincrement())
+  name          String
+  monthlyPrice  Float
+  workspaceId   Int
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  subscriptions Subscription[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([workspaceId])
+  @@unique([workspaceId, name])
+}
+
+model Subscription {
+  id           Int                @id @default(autoincrement())
+  status       SubscriptionStatus @default(Active)
+  customerId   Int
+  planId       Int
+  workspaceId  Int
+  customer     Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  plan         Plan               @relation(fields: [planId], references: [id], onDelete: Cascade)
+  workspace    Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  startedAt    DateTime           @default(now())
+  canceledAt   DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([workspaceId])
+  @@index([customerId])
+  @@index([planId])
+  @@index([status])
+}
+
+model Transaction {
+  id             Int               @id @default(autoincrement())
+  amount         Float
+  status         TransactionStatus @default(Pending)
+  subscriptionId Int
+  workspaceId    Int
+  subscription   Subscription      @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  workspace      Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  paidAt         DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([workspaceId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([paidAt])
 }

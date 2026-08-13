@@ -6,7 +6,9 @@ export default function DashboardSkeleton() {
       <div className="mt-3 h-5 w-56 rounded bg-[var(--surface-secondary)]" />
 
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, index) => (
+        {Array.from({
+          length: 4,
+        }).map((_, index) => (
           <div
             key={index}
             className="h-32 rounded-xl bg-[var(--surface-secondary)]"
@@ -14,12 +16,17 @@ export default function DashboardSkeleton() {
         ))}
       </div>
 
+      <div className="mt-8 h-96 rounded-xl bg-[var(--surface-secondary)]" />
+
       <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
         <div className="h-96 rounded-xl bg-[var(--surface-secondary)]" />
+
         <div className="h-96 rounded-xl bg-[var(--surface-secondary)]" />
       </div>
 
-      <div className="mt-8 h-80 rounded-xl bg-[var(--surface-secondary)]" />
+      <div className="mt-8 h-96 rounded-xl bg-[var(--surface-secondary)]" />
+
+      <div className="mt-8 h-72 rounded-xl bg-[var(--surface-secondary)]" />
     </div>
   );
 }

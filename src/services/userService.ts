@@ -35,8 +35,7 @@ export async function createUser(
       method: "POST",
 
       headers: {
-        "Content-Type":
-          "application/json",
+        "Content-Type": "application/json",
       },
 
       body: JSON.stringify(user),
@@ -65,8 +64,7 @@ export async function updateUser(
       method: "PATCH",
 
       headers: {
-        "Content-Type":
-          "application/json",
+        "Content-Type": "application/json",
       },
 
       body: JSON.stringify({

@@ -1,9 +1,9 @@
-import { compare } from "bcryptjs";
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { z } from "zod";
+import { compare } from "bcryptjs"; // external library for working with hashed passwords
+import NextAuth from "next-auth"; // authentication library 
+import Credentials from "next-auth/providers/credentials"; // the Credentials authentication provider from Auth.js
+import { z } from "zod"; // external validation library
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma"; // It is used to communicate with the database
 
 const loginSchema = z.object({
   email: z.email(),
@@ -16,6 +16,7 @@ export const {
   signIn,
   signOut,
 } = NextAuth({
+  // session, pages, providers and callbacks are the NextAuth config(handlers, auth, signIn, signOut)
   session: {
     strategy: "jwt",
   },

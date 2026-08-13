@@ -26,8 +26,7 @@ import { Settings } from "@/types/settings";
 export default function SettingsPage() {
   const router = useRouter();
 
-  const { isAdmin } =
-    useCurrentUser();
+  const { isAdmin } = useCurrentUser();
 
   const {
     toastMessage,
@@ -35,16 +34,11 @@ export default function SettingsPage() {
     showToast,
   } = useToast();
 
-  const [settings, setSettings] =
-    useState<Settings | null>(null);
+  const [settings, setSettings] = useState<Settings | null>(null);
 
-  const [
-    errorMessage,
-    setErrorMessage,
-  ] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isCancelled = false;

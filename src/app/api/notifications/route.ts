@@ -5,9 +5,19 @@ import { prisma } from "@/lib/prisma";
 
 import { Notification } from "@/types/notification";
 
-const LOW_STOCK_LIMIT = 5;
-const OLD_PENDING_ORDER_DAYS = 3;
 const MAX_NOTIFICATIONS = 8;
+
+function formatCurrency(
+  value: number
+) {
+  return `$${value.toLocaleString(
+    "en-US",
+    {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }
+  )}`;
+}
 
 export async function GET() {
   const authResult =
@@ -21,122 +31,162 @@ export async function GET() {
     authResult.session.user.workspaceId;
 
   try {
-    const pendingOrderLimit = new Date(
-      Date.now() -
-      OLD_PENDING_ORDER_DAYS *
-      24 *
-      60 *
-      60 *
-      1000
-    );
-
     const [
-      outOfStockProducts,
-      lowStockProducts,
-      oldPendingOrders,
+      failedTransactions,
+      pendingTransactions,
+      trialSubscriptions,
     ] = await Promise.all([
-      prisma.product.findMany({
+      prisma.transaction.findMany({
         where: {
           workspaceId,
-          stock: 0,
+          status: "Failed",
         },
 
         select: {
           id: true,
-          name: true,
-        },
+          amount: true,
 
-        orderBy: {
-          updatedAt: "desc",
-        },
-      }),
+          subscription: {
+            select: {
+              customer: {
+                select: {
+                  name: true,
+                },
+              },
 
-      prisma.product.findMany({
-        where: {
-          workspaceId,
-
-          stock: {
-            gt: 0,
-            lte: LOW_STOCK_LIMIT,
+              plan: {
+                select: {
+                  name: true,
+                },
+              },
+            },
           },
         },
 
-        select: {
-          id: true,
-          name: true,
-          stock: true,
-        },
-
         orderBy: {
-          stock: "asc",
+          createdAt: "desc",
         },
       }),
 
-      prisma.order.findMany({
+      prisma.transaction.findMany({
         where: {
           workspaceId,
           status: "Pending",
-
-          createdAt: {
-            lt: pendingOrderLimit,
-          },
         },
 
         select: {
           id: true,
-          customer: true,
-          createdAt: true,
+          amount: true,
+
+          subscription: {
+            select: {
+              customer: {
+                select: {
+                  name: true,
+                },
+              },
+
+              plan: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
         },
 
         orderBy: {
-          createdAt: "asc",
+          createdAt: "desc",
+        },
+      }),
+
+      prisma.subscription.findMany({
+        where: {
+          workspaceId,
+          status: "Trialing",
+        },
+
+        select: {
+          id: true,
+
+          customer: {
+            select: {
+              name: true,
+            },
+          },
+
+          plan: {
+            select: {
+              name: true,
+            },
+          },
+        },
+
+        orderBy: {
+          startedAt: "desc",
         },
       }),
     ]);
 
-    const outOfStockNotifications:
+    const failedPaymentNotifications:
       Notification[] =
-      outOfStockProducts.map(
-        (product) => ({
-          id: `out-of-stock-${product.id}`,
-          type: "out-of-stock",
-          title: "Product out of stock",
-          message: `${product.name} has no units remaining.`,
-          href: "/products",
+      failedTransactions.map(
+        (transaction) => ({
+          id: `failed-payment-${transaction.id}`,
+          type: "failed-payment",
+          title: "Payment failed",
+          message: `${formatCurrency(
+            transaction.amount
+          )} payment from ${transaction
+            .subscription
+            .customer.name
+            } for the ${transaction
+              .subscription.plan
+              .name
+            } plan failed.`,
+          href: "/transactions",
         })
       );
 
-    const lowStockNotifications:
+    const pendingPaymentNotifications:
       Notification[] =
-      lowStockProducts.map(
-        (product) => ({
-          id: `low-stock-${product.id}`,
-          type: "low-stock",
-          title: "Low product stock",
-          message: `${product.name} has only ${product.stock} ${product.stock === 1
-            ? "unit"
-            : "units"
-            } remaining.`,
-          href: "/products",
+      pendingTransactions.map(
+        (transaction) => ({
+          id: `pending-payment-${transaction.id}`,
+          type: "pending-payment",
+          title: "Payment pending",
+          message: `${formatCurrency(
+            transaction.amount
+          )} payment from ${transaction
+            .subscription
+            .customer.name
+            } for the ${transaction
+              .subscription.plan
+              .name
+            } plan is pending.`,
+          href: "/transactions",
         })
       );
 
-    const pendingOrderNotifications:
+    const trialNotifications:
       Notification[] =
-      oldPendingOrders.map(
-        (order) => ({
-          id: `pending-order-${order.id}`,
-          type: "pending-order",
-          title: "Pending order",
-          message: `Order #${order.id} from ${order.customer} has been pending for more than ${OLD_PENDING_ORDER_DAYS} days.`,
-          href: "/orders",
+      trialSubscriptions.map(
+        (subscription) => ({
+          id: `trial-subscription-${subscription.id}`,
+          type: "trial-subscription",
+          title: "Trial subscription",
+          message: `${subscription.customer
+            .name
+            } is currently trialing the ${subscription.plan.name
+            } plan.`,
+          href: "/subscriptions",
         })
       );
 
     const allNotifications = [
-      ...outOfStockNotifications,
-      ...lowStockNotifications,
-      ...pendingOrderNotifications,
+      ...failedPaymentNotifications,
+      ...pendingPaymentNotifications,
+      ...trialNotifications,
     ];
 
     return NextResponse.json({
@@ -146,7 +196,8 @@ export async function GET() {
           MAX_NOTIFICATIONS
         ),
 
-      total: allNotifications.length,
+      total:
+        allNotifications.length,
     });
   } catch (error) {
     console.error(

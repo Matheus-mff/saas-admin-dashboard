@@ -33,7 +33,8 @@ import { User } from "@/types/user";
 const USERS_PER_PAGE = 10;
 
 export default function UsersPage() {
-  const { isAdmin } = useCurrentUser();
+  const { isAdmin } =
+    useCurrentUser();
 
   const [search, setSearch] =
     useState("");
@@ -43,13 +44,17 @@ export default function UsersPage() {
     setCurrentPage,
   ] = useState(1);
 
-  const [sortField, setSortField] =
+  const [
+    sortField,
+    setSortField,
+  ] =
     useState<SortField>("name");
 
   const [
     sortDirection,
     setSortDirection,
-  ] = useState<SortDirection>("asc");
+  ] =
+    useState<SortDirection>("asc");
 
   const [
     roleFilter,
@@ -65,12 +70,14 @@ export default function UsersPage() {
   const [
     selectedUser,
     setSelectedUser,
-  ] = useState<User | undefined>();
+  ] =
+    useState<User | undefined>();
 
   const [
     userToDelete,
     setUserToDelete,
-  ] = useState<User | undefined>();
+  ] =
+    useState<User | undefined>();
 
   const {
     toastMessage,
@@ -88,32 +95,37 @@ export default function UsersPage() {
     removeUser,
   } = useUsers();
 
-  const normalizedSearch = search
-    .trim()
-    .toLowerCase();
+  const normalizedSearch =
+    search.trim().toLowerCase();
 
-  const filteredUsers = users.filter(
-    (user) => {
+  const filteredUsers =
+    users.filter((user) => {
       const matchesSearch =
         user.name
           .toLowerCase()
-          .includes(normalizedSearch) ||
+          .includes(
+            normalizedSearch
+          ) ||
         user.email
           .toLowerCase()
-          .includes(normalizedSearch) ||
+          .includes(
+            normalizedSearch
+          ) ||
         user.role
           .toLowerCase()
-          .includes(normalizedSearch);
+          .includes(
+            normalizedSearch
+          );
 
       const matchesRole =
         roleFilter === "All" ||
         user.role === roleFilter;
 
       return (
-        matchesSearch && matchesRole
+        matchesSearch &&
+        matchesRole
       );
-    }
-  );
+    });
 
   const sortedUsers = [
     ...filteredUsers,
@@ -122,13 +134,15 @@ export default function UsersPage() {
     const valueB = b[sortField];
 
     if (valueA < valueB) {
-      return sortDirection === "asc"
+      return sortDirection ===
+        "asc"
         ? -1
         : 1;
     }
 
     if (valueA > valueB) {
-      return sortDirection === "asc"
+      return sortDirection ===
+        "asc"
         ? 1
         : -1;
     }
@@ -141,10 +155,11 @@ export default function UsersPage() {
     USERS_PER_PAGE
   );
 
-  const validCurrentPage = Math.min(
-    currentPage,
-    Math.max(totalPages, 1)
-  );
+  const validCurrentPage =
+    Math.min(
+      currentPage,
+      Math.max(totalPages, 1)
+    );
 
   const startIndex =
     (validCurrentPage - 1) *
@@ -153,7 +168,8 @@ export default function UsersPage() {
   const paginatedUsers =
     sortedUsers.slice(
       startIndex,
-      startIndex + USERS_PER_PAGE
+      startIndex +
+      USERS_PER_PAGE
     );
 
   function handleSort(
@@ -162,7 +178,8 @@ export default function UsersPage() {
     if (field === sortField) {
       setSortDirection(
         (previousDirection) =>
-          previousDirection === "asc"
+          previousDirection ===
+            "asc"
             ? "desc"
             : "asc"
       );
@@ -197,7 +214,7 @@ export default function UsersPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">
-            Users
+            Team
           </h1>
 
           <p className="mt-2 muted-text">
@@ -210,11 +227,14 @@ export default function UsersPage() {
         {isAdmin && (
           <Button
             onClick={() => {
-              setSelectedUser(undefined);
+              setSelectedUser(
+                undefined
+              );
+
               setIsModalOpen(true);
             }}
           >
-            Add User
+            Add Member
           </Button>
         )}
       </div>
@@ -244,7 +264,7 @@ export default function UsersPage() {
 
         <input
           type="search"
-          placeholder="Search users..."
+          placeholder="Search team members..."
           value={search}
           onChange={(event) => {
             setSearch(
@@ -257,39 +277,59 @@ export default function UsersPage() {
         />
 
         <div className="mt-6">
-          {filteredUsers.length === 0 ? (
+          {filteredUsers.length ===
+            0 ? (
             <EmptyState
-              title="No users found"
+              title="No members found"
               description="Try another search term or role."
             />
           ) : (
             <>
               <Table
-                users={paginatedUsers}
-                sortField={sortField}
+                users={
+                  paginatedUsers
+                }
+                sortField={
+                  sortField
+                }
                 sortDirection={
                   sortDirection
                 }
-                canManage={isAdmin}
-                onSort={handleSort}
+                canManage={
+                  isAdmin
+                }
+                onSort={
+                  handleSort
+                }
                 onEdit={(user) => {
-                  setSelectedUser(user);
-                  setIsModalOpen(true);
+                  setSelectedUser(
+                    user
+                  );
+
+                  setIsModalOpen(
+                    true
+                  );
                 }}
                 onDelete={(user) => {
-                  setUserToDelete(user);
+                  setUserToDelete(
+                    user
+                  );
                 }}
               />
 
-              <Pagination
-                currentPage={
-                  validCurrentPage
-                }
-                totalPages={totalPages}
-                onPageChange={
-                  setCurrentPage
-                }
-              />
+              {totalPages > 1 && (
+                <Pagination
+                  currentPage={
+                    validCurrentPage
+                  }
+                  totalPages={
+                    totalPages
+                  }
+                  onPageChange={
+                    setCurrentPage
+                  }
+                />
+              )}
             </>
           )}
         </div>
@@ -301,10 +341,12 @@ export default function UsersPage() {
             open={isModalOpen}
             title={
               selectedUser
-                ? "Edit User"
-                : "Add User"
+                ? "Edit Member"
+                : "Add Member"
             }
-            onClose={closeUserModal}
+            onClose={
+              closeUserModal
+            }
           >
             <UserForm
               user={selectedUser}
@@ -315,27 +357,32 @@ export default function UsersPage() {
                 user
               ) => {
                 try {
-                  if (selectedUser) {
+                  if (
+                    selectedUser
+                  ) {
                     await editUser(
                       selectedUser.id,
                       user
                     );
 
                     showToast(
-                      "User updated successfully."
+                      "Member updated successfully."
                     );
                   } else {
-                    await addUser(user);
+                    await addUser(
+                      user
+                    );
 
                     showToast(
-                      "User created successfully."
+                      "Member created successfully."
                     );
                   }
 
                   closeUserModal();
                 } catch (error) {
                   const message =
-                    error instanceof Error
+                    error instanceof
+                      Error
                       ? error.message
                       : "Something went wrong.";
 
@@ -352,7 +399,7 @@ export default function UsersPage() {
             open={Boolean(
               userToDelete
             )}
-            title="Delete User"
+            title="Delete Member"
             message={`Are you sure you want to delete "${userToDelete?.name}"?`}
             onCancel={() =>
               setUserToDelete(
@@ -370,7 +417,7 @@ export default function UsersPage() {
                 );
 
                 showToast(
-                  "User deleted successfully."
+                  "Member deleted successfully."
                 );
 
                 setUserToDelete(
@@ -378,9 +425,10 @@ export default function UsersPage() {
                 );
               } catch (error) {
                 const message =
-                  error instanceof Error
+                  error instanceof
+                    Error
                     ? error.message
-                    : "Unable to delete user.";
+                    : "Unable to delete member.";
 
                 showToast(
                   message,

@@ -18,35 +18,24 @@ export default function SettingsForm({
   canManageWorkspace,
   onSave,
 }: SettingsFormProps) {
-  const [name, setName] = useState(
-    initialValues.name
-  );
+  const [name, setName] = useState(initialValues.name);
 
-  const [email, setEmail] = useState(
-    initialValues.email
-  );
+  const [email, setEmail] = useState(initialValues.email);
 
-  const [company, setCompany] = useState(
-    initialValues.company
-  );
+  const [company, setCompany] = useState(initialValues.company);
 
-  const [
-    emailNotifications,
-    setEmailNotifications,
-  ] = useState(
+  const [emailNotifications, setEmailNotifications] = useState(
     initialValues.emailNotifications
   );
 
-  const [errorMessage, setErrorMessage] =
-    useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const [isSaving, setIsSaving] =
-    useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   async function handleSubmit(
-    event: React.SubmitEvent<HTMLFormElement>
+    e: React.SubmitEvent<HTMLFormElement>
   ) {
-    event.preventDefault();
+    e.preventDefault();
 
     if (isSaving) return;
 
@@ -56,9 +45,7 @@ export default function SettingsForm({
     try {
       const error = await onSave({
         name: name.trim(),
-        email: email
-          .trim()
-          .toLowerCase(),
+        email: email.trim().toLowerCase(),
         company,
         emailNotifications,
       });
@@ -103,9 +90,9 @@ export default function SettingsForm({
                 type="text"
                 autoComplete="name"
                 value={name}
-                onChange={(event) =>
+                onChange={(e) =>
                   setName(
-                    event.target.value
+                    e.target.value
                   )
                 }
                 required
@@ -128,9 +115,9 @@ export default function SettingsForm({
                 type="email"
                 autoComplete="email"
                 value={email}
-                onChange={(event) =>
+                onChange={(e) =>
                   setEmail(
-                    event.target.value
+                    e.target.value
                   )
                 }
                 required
@@ -163,9 +150,9 @@ export default function SettingsForm({
               id="settings-company"
               type="text"
               value={company}
-              onChange={(event) =>
+              onChange={(e) =>
                 setCompany(
-                  event.target.value
+                  e.target.value
                 )
               }
               disabled={
@@ -215,9 +202,9 @@ export default function SettingsForm({
               checked={
                 emailNotifications
               }
-              onChange={(event) =>
+              onChange={(e) =>
                 setEmailNotifications(
-                  event.target.checked
+                  e.target.checked
                 )
               }
             />

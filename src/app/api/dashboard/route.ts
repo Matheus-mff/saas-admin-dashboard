@@ -1,10 +1,61 @@
 import { NextResponse } from "next/server";
 
-import { ORDER_STATUSES } from "@/constants/orderStatuses";
-import { USER_ROLES } from "@/constants/userRoles";
+import { SUBSCRIPTION_STATUSES } from "@/constants/subscriptionStatuses";
 
 import { requireAuthenticatedUser } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
+
+function getMonthStart(
+  monthsAgo: number
+) {
+  const now = new Date();
+
+  return new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth() - monthsAgo,
+      1
+    )
+  );
+}
+
+function getNextMonthStart() {
+  const now = new Date();
+
+  return new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth() + 1,
+      1
+    )
+  );
+}
+
+function getFollowingMonthStart(
+  date: Date
+) {
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth() + 1,
+      1
+    )
+  );
+}
+
+function getMonthKey(date: Date) {
+  return `${date.getUTCFullYear()}-${date.getUTCMonth()}`;
+}
+
+function getMonthLabel(date: Date) {
+  return date.toLocaleString(
+    "en-US",
+    {
+      month: "short",
+      timeZone: "UTC",
+    }
+  );
+}
 
 export async function GET() {
   const authResult =
@@ -18,56 +69,87 @@ export async function GET() {
     authResult.session.user.workspaceId;
 
   try {
+    const historyStart =
+      getMonthStart(5);
+
+    const historyEnd =
+      getNextMonthStart();
+
     const [
-      totalUsers,
-      totalProducts,
-      totalOrders,
+      totalCustomers,
+      activeSubscriptions,
+      activeSubscriptionsForMrr,
       revenueResult,
-      userRoleGroups,
-      orderStatusGroups,
-      recentOrders,
+      plans,
+      subscriptionStatusGroups,
+      revenueTransactions,
+      subscriptionHistory,
+      recentTransactions,
     ] = await Promise.all([
-      prisma.user.count({
+      prisma.customer.count({
         where: {
           workspaceId,
         },
       }),
 
-      prisma.product.count({
+      prisma.subscription.count({
         where: {
           workspaceId,
+          status: "Active",
         },
       }),
 
-      prisma.order.count({
+      prisma.subscription.findMany({
         where: {
           workspaceId,
+          status: "Active",
+        },
+
+        select: {
+          plan: {
+            select: {
+              monthlyPrice: true,
+            },
+          },
         },
       }),
 
-      prisma.order.aggregate({
+      prisma.transaction.aggregate({
         where: {
           workspaceId,
+          status: "Paid",
         },
 
         _sum: {
-          total: true,
+          amount: true,
         },
       }),
 
-      prisma.user.groupBy({
-        by: ["role"],
-
+      prisma.plan.findMany({
         where: {
           workspaceId,
         },
 
-        _count: {
-          role: true,
+        select: {
+          name: true,
+
+          subscriptions: {
+            where: {
+              status: "Active",
+            },
+
+            select: {
+              id: true,
+            },
+          },
+        },
+
+        orderBy: {
+          monthlyPrice: "asc",
         },
       }),
 
-      prisma.order.groupBy({
+      prisma.subscription.groupBy({
         by: ["status"],
 
         where: {
@@ -79,9 +161,66 @@ export async function GET() {
         },
       }),
 
-      prisma.order.findMany({
+      prisma.transaction.findMany({
         where: {
           workspaceId,
+          status: "Paid",
+
+          paidAt: {
+            gte: historyStart,
+            lt: historyEnd,
+          },
+        },
+
+        select: {
+          amount: true,
+          paidAt: true,
+        },
+      }),
+
+      prisma.subscription.findMany({
+        where: {
+          workspaceId,
+
+          startedAt: {
+            lt: historyEnd,
+          },
+        },
+
+        select: {
+          startedAt: true,
+          canceledAt: true,
+        },
+      }),
+
+      prisma.transaction.findMany({
+        where: {
+          workspaceId,
+        },
+
+        include: {
+          subscription: {
+            select: {
+              id: true,
+
+              customer: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  company: true,
+                },
+              },
+
+              plan: {
+                select: {
+                  id: true,
+                  name: true,
+                  monthlyPrice: true,
+                },
+              },
+            },
+          },
         },
 
         orderBy: {
@@ -92,50 +231,146 @@ export async function GET() {
       }),
     ]);
 
-    const usersByRole =
-      USER_ROLES.map((role) => {
-        const roleGroup =
-          userRoleGroups.find(
-            (group) =>
-              group.role === role
+    const mrr =
+      activeSubscriptionsForMrr.reduce(
+        (total, subscription) =>
+          total +
+          subscription.plan
+            .monthlyPrice,
+        0
+      );
+
+    const subscriptionsByPlan =
+      plans.map((plan) => ({
+        name: plan.name,
+        value:
+          plan.subscriptions.length,
+      }));
+
+    const subscriptionsByStatus =
+      SUBSCRIPTION_STATUSES.map(
+        (status) => {
+          const group =
+            subscriptionStatusGroups.find(
+              (item) =>
+                item.status === status
+            );
+
+          return {
+            name: status,
+            value:
+              group?._count.status ??
+              0,
+          };
+        }
+      );
+
+    const revenueByMonth =
+      new Map<string, number>();
+
+    const months = Array.from(
+      { length: 6 },
+      (_, index) =>
+        getMonthStart(5 - index)
+    );
+
+    months.forEach((month) => {
+      revenueByMonth.set(
+        getMonthKey(month),
+        0
+      );
+    });
+
+    revenueTransactions.forEach(
+      (transaction) => {
+        if (!transaction.paidAt) {
+          return;
+        }
+
+        const key =
+          getMonthKey(
+            transaction.paidAt
           );
 
-        return {
-          name: role,
-          value:
-            roleGroup?._count.role ?? 0,
-        };
-      });
+        revenueByMonth.set(
+          key,
+          (revenueByMonth.get(key) ??
+            0) +
+          transaction.amount
+        );
+      }
+    );
 
-    const ordersByStatus =
-      ORDER_STATUSES.map((status) => {
-        const statusGroup =
-          orderStatusGroups.find(
-            (group) =>
-              group.status === status
+    const revenueOverTime =
+      months.map((month) => ({
+        month:
+          getMonthLabel(month),
+
+        revenue:
+          revenueByMonth.get(
+            getMonthKey(month)
+          ) ?? 0,
+      }));
+
+    /*
+      Subscription Growth represents the size
+      of the subscription base at the end of
+      each month.
+
+      A subscription counts if it had started
+      before the following month and had not
+      already been canceled.
+    */
+    const subscriptionGrowth =
+      months.map((month) => {
+        const monthEnd =
+          getFollowingMonthStart(
+            month
           );
 
+        const subscriptions =
+          subscriptionHistory.filter(
+            (subscription) => {
+              const hadStarted =
+                subscription.startedAt <
+                monthEnd;
+
+              const wasStillSubscribed =
+                !subscription.canceledAt ||
+                subscription.canceledAt >=
+                monthEnd;
+
+              return (
+                hadStarted &&
+                wasStillSubscribed
+              );
+            }
+          ).length;
+
         return {
-          name: status,
-          value:
-            statusGroup?._count.status ??
-            0,
+          month:
+            getMonthLabel(month),
+
+          subscriptions,
         };
       });
 
     return NextResponse.json({
       stats: {
-        totalUsers,
-        totalProducts,
-        totalOrders,
+        totalCustomers,
+        activeSubscriptions,
+        mrr,
 
         totalRevenue:
-          revenueResult._sum.total ?? 0,
+          revenueResult._sum
+            .amount ?? 0,
       },
 
-      usersByRole,
-      ordersByStatus,
-      recentOrders,
+      revenueOverTime,
+      subscriptionsByPlan,
+      subscriptionsByStatus,
+      subscriptionGrowth,
+      recentTransactions,
     });
   } catch (error) {
     console.error(

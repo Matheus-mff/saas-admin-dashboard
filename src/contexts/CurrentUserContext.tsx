@@ -40,10 +40,10 @@ export function CurrentUserProvider({
   const isManager =
     user.role === "Manager";
 
-  const canManageOperations =
-    isAdmin || isManager;
+  const canManageOperations = isAdmin || isManager;
 
   return (
+    // Every component inside these Provider tags is allowed to access this value
     <CurrentUserContext.Provider
       value={{
         user,
@@ -58,8 +58,7 @@ export function CurrentUserProvider({
 }
 
 export function useCurrentUser() {
-  const context =
-    useContext(CurrentUserContext);
+  const context = useContext(CurrentUserContext);
 
   if (!context) {
     throw new Error(

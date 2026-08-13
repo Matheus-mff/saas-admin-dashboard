@@ -34,10 +34,15 @@ export default function Table({
   return (
     <div className="table-container">
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table className="w-full min-w-[900px] table-fixed border-collapse">
           <thead className="table-header">
             <tr>
-              <th className="px-6 py-3 text-left">
+              <th
+                className={`px-6 py-3 text-left ${canManage
+                    ? "w-[8%]"
+                    : "w-[10%]"
+                  }`}
+              >
                 ID
               </th>
 
@@ -47,6 +52,11 @@ export default function Table({
                 activeField={sortField}
                 direction={sortDirection}
                 onSort={onSort}
+                className={
+                  canManage
+                    ? "w-[22%]"
+                    : "w-[25%]"
+                }
               />
 
               <SortableHeader
@@ -55,6 +65,11 @@ export default function Table({
                 activeField={sortField}
                 direction={sortDirection}
                 onSort={onSort}
+                className={
+                  canManage
+                    ? "w-[35%]"
+                    : "w-[40%]"
+                }
               />
 
               <SortableHeader
@@ -63,10 +78,16 @@ export default function Table({
                 activeField={sortField}
                 direction={sortDirection}
                 onSort={onSort}
+                align="center"
+                className={
+                  canManage
+                    ? "w-[17%]"
+                    : "w-[25%]"
+                }
               />
 
               {canManage && (
-                <th className="px-6 py-3 text-left">
+                <th className="w-[18%] px-6 py-3 text-center">
                   Actions
                 </th>
               )}
@@ -79,7 +100,7 @@ export default function Table({
                 key={user.id}
                 className="table-row"
               >
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 tabular-nums">
                   {user.id}
                 </td>
 
@@ -91,15 +112,15 @@ export default function Table({
                   {user.email}
                 </td>
 
-                <td className="px-6 py-4">
-                  <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
+                <td className="px-6 py-4 text-center">
+                  <span className="role-badge">
                     {user.role}
                   </span>
                 </td>
 
                 {canManage && (
                   <td className="px-6 py-4">
-                    <div className="flex gap-2">
+                    <div className="flex justify-center gap-2">
                       <button
                         type="button"
                         onClick={() =>
@@ -108,7 +129,9 @@ export default function Table({
                         className="icon-button"
                         aria-label={`Edit ${user.name}`}
                       >
-                        <Pencil size={18} />
+                        <Pencil
+                          size={18}
+                        />
                       </button>
 
                       <button
@@ -119,7 +142,9 @@ export default function Table({
                         className="icon-button danger-icon-button"
                         aria-label={`Delete ${user.name}`}
                       >
-                        <Trash2 size={18} />
+                        <Trash2
+                          size={18}
+                        />
                       </button>
                     </div>
                   </td>

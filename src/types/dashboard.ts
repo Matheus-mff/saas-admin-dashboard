@@ -1,10 +1,10 @@
-import { Order } from "@/types/order";
+import { Transaction } from "@/types/transaction";
 
 export type DashboardStats = {
-  totalUsers: number;
-  totalOrders: number;
+  totalCustomers: number;
+  activeSubscriptions: number;
+  mrr: number;
   totalRevenue: number;
-  totalProducts: number;
 };
 
 export type ChartData = {
@@ -12,9 +12,21 @@ export type ChartData = {
   value: number;
 };
 
+export type RevenuePoint = {
+  month: string;
+  revenue: number;
+};
+
+export type SubscriptionGrowthPoint = {
+  month: string;
+  subscriptions: number;
+};
+
 export type DashboardData = {
   stats: DashboardStats;
-  usersByRole: ChartData[];
-  ordersByStatus: ChartData[];
-  recentOrders: Order[];
+  revenueOverTime: RevenuePoint[];
+  subscriptionsByPlan: ChartData[];
+  subscriptionsByStatus: ChartData[];
+  subscriptionGrowth: SubscriptionGrowthPoint[];
+  recentTransactions: Transaction[];
 };

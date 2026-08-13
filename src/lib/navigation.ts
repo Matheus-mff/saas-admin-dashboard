@@ -1,9 +1,11 @@
 import {
+  CreditCard,
   LayoutDashboard,
-  Users,
-  Package,
-  ShoppingCart,
+  ReceiptText,
   Settings,
+  Users,
+  UsersRound,
+  WalletCards,
 } from "lucide-react";
 
 export const navigation = [
@@ -14,18 +16,28 @@ export const navigation = [
   },
   {
     href: "/users",
-    label: "Users",
+    label: "Team",
     icon: Users,
   },
   {
-    href: "/products",
-    label: "Products",
-    icon: Package,
+    href: "/customers",
+    label: "Customers",
+    icon: UsersRound,
   },
   {
-    href: "/orders",
-    label: "Orders",
-    icon: ShoppingCart,
+    href: "/plans",
+    label: "Plans",
+    icon: WalletCards,
+  },
+  {
+    href: "/subscriptions",
+    label: "Subscriptions",
+    icon: CreditCard,
+  },
+  {
+    href: "/transactions",
+    label: "Transactions",
+    icon: ReceiptText,
   },
   {
     href: "/settings",

@@ -3,8 +3,8 @@
 import {
   AlertTriangle,
   Bell,
-  Box,
   Clock3,
+  CreditCard,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -22,41 +22,65 @@ import {
   NotificationType,
 } from "@/types/notification";
 
-import {
-  DASHBOARD_DATA_CHANGED,
-} from "@/utils/dashboardEvents";
+import { DASHBOARD_DATA_CHANGED } from "@/utils/dashboardEvents";
 
 function getNotificationIcon(
   type: NotificationType
 ) {
-  if (type === "out-of-stock") {
-    return <AlertTriangle size={18} />;
+  if (
+    type === "failed-payment"
+  ) {
+    return (
+      <AlertTriangle
+        size={18}
+        className="text-red-500"
+      />
+    );
   }
 
-  if (type === "low-stock") {
-    return <Box size={18} />;
+  if (
+    type === "pending-payment"
+  ) {
+    return (
+      <Clock3
+        size={18}
+        className="text-amber-500"
+      />
+    );
   }
 
-  return <Clock3 size={18} />;
+  return (
+    <CreditCard
+      size={18}
+      className="text-blue-500"
+    />
+  );
 }
 
 export default function NotificationBell() {
   const containerRef =
     useRef<HTMLDivElement>(null);
 
-  const [notifications, setNotifications] =
-    useState<Notification[]>([]);
+  const [
+    notifications,
+    setNotifications,
+  ] = useState<Notification[]>([]);
 
-  const [total, setTotal] = useState(0);
+  const [total, setTotal] =
+    useState(0);
 
   const [isOpen, setIsOpen] =
     useState(false);
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
 
-  const [errorMessage, setErrorMessage] =
-    useState("");
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] = useState("");
 
   useEffect(() => {
     async function loadNotifications() {
@@ -124,7 +148,9 @@ export default function NotificationBell() {
     function handleKeyDown(
       event: KeyboardEvent
     ) {
-      if (event.key === "Escape") {
+      if (
+        event.key === "Escape"
+      ) {
         setIsOpen(false);
       }
     }
@@ -153,7 +179,9 @@ export default function NotificationBell() {
   }, []);
 
   const badgeText =
-    total > 99 ? "99+" : total.toString();
+    total > 99
+      ? "99+"
+      : total.toString();
 
   return (
     <div
@@ -171,7 +199,10 @@ export default function NotificationBell() {
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         onClick={() =>
-          setIsOpen((current) => !current)
+          setIsOpen(
+            (current) =>
+              !current
+          )
         }
       >
         <Bell size={20} />
@@ -230,7 +261,8 @@ export default function NotificationBell() {
 
             {!isLoading &&
               !errorMessage &&
-              notifications.length === 0 && (
+              notifications.length ===
+              0 && (
                 <div className="p-6 text-center">
                   <Bell
                     size={28}
@@ -238,12 +270,14 @@ export default function NotificationBell() {
                   />
 
                   <p className="mt-3 text-sm font-medium">
-                    Everything looks good
+                    Everything looks
+                    good
                   </p>
 
                   <p className="mt-1 text-sm muted-text">
-                    There are no stock or
-                    pending-order alerts.
+                    There are no payment
+                    or subscription
+                    alerts.
                   </p>
                 </div>
               )}
@@ -253,14 +287,20 @@ export default function NotificationBell() {
               notifications.map(
                 (notification) => (
                   <Link
-                    key={notification.id}
-                    href={notification.href}
+                    key={
+                      notification.id
+                    }
+                    href={
+                      notification.href
+                    }
                     onClick={() =>
-                      setIsOpen(false)
+                      setIsOpen(
+                        false
+                      )
                     }
                     className="flex gap-3 border-b px-4 py-3 transition-colors last:border-b-0 hover:bg-[var(--surface-secondary)]"
                   >
-                    <div className="muted-text mt-0.5 shrink-0">
+                    <div className="mt-0.5 shrink-0">
                       {getNotificationIcon(
                         notification.type
                       )}
@@ -268,11 +308,15 @@ export default function NotificationBell() {
 
                     <div className="min-w-0">
                       <p className="text-sm font-medium">
-                        {notification.title}
+                        {
+                          notification.title
+                        }
                       </p>
 
                       <p className="mt-1 text-sm muted-text">
-                        {notification.message}
+                        {
+                          notification.message
+                        }
                       </p>
                     </div>
                   </Link>
@@ -284,8 +328,10 @@ export default function NotificationBell() {
             notifications.length && (
               <div className="border-t px-4 py-3 text-center text-xs muted-text">
                 Showing the first{" "}
-                {notifications.length} of{" "}
-                {total} alerts.
+                {
+                  notifications.length
+                }{" "}
+                of {total} alerts.
               </div>
             )}
         </div>

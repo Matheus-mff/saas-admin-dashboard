@@ -1,5 +1,11 @@
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
+
+/*
+Zod = the library
+z = the object used to build schemas / similar to TypeScript, but it works while the application is running
+schema = a set of validation rules
+*/
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";

@@ -14,27 +14,20 @@ import {
 export default function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [company, setCompany] =
-    useState("");
+  const [company, setCompany] = useState("");
 
-  const [password, setPassword] =
-    useState("");
+  const [password, setPassword] = useState("");
 
-  const [
-    confirmPassword,
-    setConfirmPassword,
-  ] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [errorMessage, setErrorMessage] =
-    useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(
-    event: React.SubmitEvent<HTMLFormElement>
+    e: React.SubmitEvent<HTMLFormElement>
   ) {
-    event.preventDefault();
+    e.preventDefault();
 
     if (isSubmitting) return;
 
@@ -124,8 +117,8 @@ export default function RegisterForm() {
             type="text"
             autoComplete="name"
             value={name}
-            onChange={(event) =>
-              setName(event.target.value)
+            onChange={(e) =>
+              setName(e.target.value)
             }
             required
             minLength={2}
@@ -147,8 +140,8 @@ export default function RegisterForm() {
             type="email"
             autoComplete="email"
             value={email}
-            onChange={(event) =>
-              setEmail(event.target.value)
+            onChange={(e) =>
+              setEmail(e.target.value)
             }
             required
             className="form-control"
@@ -168,8 +161,8 @@ export default function RegisterForm() {
             type="text"
             autoComplete="organization"
             value={company}
-            onChange={(event) =>
-              setCompany(event.target.value)
+            onChange={(e) =>
+              setCompany(e.target.value)
             }
             required
             minLength={2}
@@ -196,9 +189,9 @@ export default function RegisterForm() {
               type="password"
               autoComplete="new-password"
               value={password}
-              onChange={(event) =>
+              onChange={(e) =>
                 setPassword(
-                  event.target.value
+                  e.target.value
                 )
               }
               required
@@ -221,9 +214,9 @@ export default function RegisterForm() {
               type="password"
               autoComplete="new-password"
               value={confirmPassword}
-              onChange={(event) =>
+              onChange={(e) =>
                 setConfirmPassword(
-                  event.target.value
+                  e.target.value
                 )
               }
               required

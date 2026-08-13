@@ -19,25 +19,20 @@ export default function AppShell({
   children,
   user,
 }: AppShellProps) {
-  const [isSidebarOpen, setIsSidebarOpen] =
-    useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <CurrentUserProvider user={user}>
       <div className="app-surface min-h-screen">
         <Sidebar
           isOpen={isSidebarOpen}
-          onClose={() =>
-            setIsSidebarOpen(false)
-          }
+          onClose={() => setIsSidebarOpen(false)}
         />
 
         <div className="md:ml-64">
           <Header
             user={user}
-            onMenuClick={() =>
-              setIsSidebarOpen(true)
-            }
+            onMenuClick={() => setIsSidebarOpen(true)}
           />
 
           <main className="p-4 sm:p-6 lg:p-8">

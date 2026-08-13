@@ -17,31 +17,21 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
-  const [isConfirming, setIsConfirming] =
-    useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   useEffect(() => {
     if (!open) return;
 
     function handleKeyDown(e: KeyboardEvent) {
-      if (
-        e.key === "Escape" &&
-        !isConfirming
-      ) {
+      if (e.key === "Escape" && !isConfirming) {
         onCancel();
       }
     }
 
-    window.addEventListener(
-      "keydown",
-      handleKeyDown
-    );
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener(
-        "keydown",
-        handleKeyDown
-      );
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [open, isConfirming, onCancel]);
 

@@ -32,32 +32,22 @@ export default function UserForm({
 }: UserFormProps) {
   const isEditing = Boolean(user);
 
-  const [name, setName] = useState(
-    user?.name ?? ""
-  );
+  const [name, setName] = useState(user?.name ?? "");
 
-  const [email, setEmail] = useState(
-    user?.email ?? ""
-  );
+  const [email, setEmail] = useState(user?.email ?? "");
 
-  const [role, setRole] =
-    useState<UserRole | "">(
-      user?.role ?? ""
-    );
+  const [role, setRole] = useState<UserRole | "">(user?.role ?? "");
 
-  const [password, setPassword] =
-    useState("");
+  const [password, setPassword] = useState("");
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [errors, setErrors] =
-    useState<FormErrors>({
-      name: "",
-      email: "",
-      role: "",
-      password: "",
-    });
+  const [errors, setErrors] = useState<FormErrors>({
+    name: "",
+    email: "",
+    role: "",
+    password: "",
+  });
 
   function validate() {
     const newErrors: FormErrors = {
@@ -68,39 +58,32 @@ export default function UserForm({
     };
 
     if (!name.trim()) {
-      newErrors.name =
-        "Name is required.";
+      newErrors.name = "Name is required.";
     }
 
     if (!email.trim()) {
-      newErrors.email =
-        "Email is required.";
+      newErrors.email = "Email is required.";
     } else if (
       !/\S+@\S+\.\S+/.test(email)
     ) {
-      newErrors.email =
-        "Please enter a valid email.";
+      newErrors.email = "Please enter a valid email.";
     }
 
     if (!role) {
-      newErrors.role =
-        "Please select a role.";
+      newErrors.role = "Please select a role.";
     }
 
     if (!isEditing) {
       if (!password) {
-        newErrors.password =
-          "Temporary password is required.";
+        newErrors.password = "Temporary password is required.";
       } else if (
         password.length < 8
       ) {
-        newErrors.password =
-          "Password must contain at least 8 characters.";
+        newErrors.password = "Password must contain at least 8 characters.";
       } else if (
         password.length > 100
       ) {
-        newErrors.password =
-          "Password is too long.";
+        newErrors.password = "Password is too long.";
       }
     }
 
@@ -112,9 +95,9 @@ export default function UserForm({
   }
 
   async function handleSubmit(
-    event: React.SubmitEvent<HTMLFormElement>
+    e: React.SubmitEvent<HTMLFormElement>
   ) {
-    event.preventDefault();
+    e.preventDefault();
 
     if (isSubmitting) return;
     if (!validate() || !role) return;
@@ -156,8 +139,8 @@ export default function UserForm({
             type="text"
             autoComplete="name"
             value={name}
-            onChange={(event) => {
-              setName(event.target.value);
+            onChange={(e) => {
+              setName(e.target.value);
 
               if (errors.name) {
                 setErrors(
@@ -169,8 +152,8 @@ export default function UserForm({
               }
             }}
             className={`form-control ${errors.name
-                ? "form-control-error"
-                : ""
+              ? "form-control-error"
+              : ""
               }`}
           />
 
@@ -197,9 +180,9 @@ export default function UserForm({
             type="email"
             autoComplete="email"
             value={email}
-            onChange={(event) => {
+            onChange={(e) => {
               setEmail(
-                event.target.value
+                e.target.value
               );
 
               if (errors.email) {
@@ -212,8 +195,8 @@ export default function UserForm({
               }
             }}
             className={`form-control ${errors.email
-                ? "form-control-error"
-                : ""
+              ? "form-control-error"
+              : ""
               }`}
           />
 
@@ -238,11 +221,8 @@ export default function UserForm({
           <select
             id="user-role"
             value={role}
-            onChange={(event) => {
-              setRole(
-                event.target
-                  .value as UserRole
-              );
+            onChange={(e) => {
+              setRole(e.target.value as UserRole);
 
               if (errors.role) {
                 setErrors(
@@ -254,8 +234,8 @@ export default function UserForm({
               }
             }}
             className={`form-control ${errors.role
-                ? "form-control-error"
-                : ""
+              ? "form-control-error"
+              : ""
               }`}
           >
             <option
@@ -301,10 +281,8 @@ export default function UserForm({
               type="password"
               autoComplete="new-password"
               value={password}
-              onChange={(event) => {
-                setPassword(
-                  event.target.value
-                );
+              onChange={(e) => {
+                setPassword(e.target.value);
 
                 if (errors.password) {
                   setErrors(
@@ -316,8 +294,8 @@ export default function UserForm({
                 }
               }}
               className={`form-control ${errors.password
-                  ? "form-control-error"
-                  : ""
+                ? "form-control-error"
+                : ""
                 }`}
             />
 
@@ -354,7 +332,7 @@ export default function UserForm({
               ? "Saving..."
               : isEditing
                 ? "Save Changes"
-                : "Create User"}
+                : "Create Member"}
           </button>
         </div>
       </fieldset>

@@ -6,12 +6,26 @@ import { useActionState } from "react";
 
 import { login } from "@/app/(auth)/login/actions";
 
+/* 
+INPUT:
+[1] login
+→ action React should run
+
+[2] undefined
+→ initial action state
+
+OUTPUT:
+[1] errorMessage
+→ current result/state returned by login
+
+[2] formAction
+→ function used to trigger login
+
+[3] isPending
+→ whether login is currently running
+*/
 export default function LoginForm() {
-  const [
-    errorMessage,
-    formAction,
-    isPending,
-  ] = useActionState(
+  const [errorMessage, formAction, isPending] = useActionState(
     login,
     undefined
   );
@@ -64,7 +78,7 @@ export default function LoginForm() {
           name="password"
           type="password"
           autoComplete="current-password"
-          defaultValue="admin123"
+          defaultValue="AdminDemo2026!"
           disabled={isPending}
           required
           className="form-control"
@@ -100,7 +114,7 @@ export default function LoginForm() {
         </p>
 
         <p>
-          Password: admin123
+          Password: AdminDemo2026!
         </p>
       </div>
 

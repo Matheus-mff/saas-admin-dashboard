@@ -30,10 +30,7 @@ const roleLabels: Record<
 };
 
 function getInitials(name: string) {
-  const nameParts = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+  const nameParts = name.trim().split(/\s+/).filter(Boolean);
 
   if (nameParts.length === 0) {
     return "U";
@@ -61,8 +58,7 @@ export default function Header({
     user.name
   );
 
-  const roleLabel =
-    roleLabels[user.role];
+  const roleLabel = roleLabels[user.role];
 
   return (
     <header className="navigation-surface flex h-16 items-center justify-between border-b px-4 sm:px-6 lg:px-8">

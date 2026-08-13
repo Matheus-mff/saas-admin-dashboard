@@ -19,37 +19,21 @@ type PasswordErrors = {
 export default function ChangePasswordForm({
   onSuccess,
 }: ChangePasswordFormProps) {
-  const [
-    currentPassword,
-    setCurrentPassword,
-  ] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
 
-  const [
-    newPassword,
-    setNewPassword,
-  ] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
-  const [
-    confirmPassword,
-    setConfirmPassword,
-  ] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [
-    errorMessage,
-    setErrorMessage,
-  ] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const [
-    isSubmitting,
-    setIsSubmitting,
-  ] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [errors, setErrors] =
-    useState<PasswordErrors>({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+  const [errors, setErrors] = useState<PasswordErrors>({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   function validate() {
     const newErrors: PasswordErrors = {
@@ -88,8 +72,7 @@ export default function ChangePasswordForm({
       newErrors.confirmPassword =
         "Please confirm your new password.";
     } else if (
-      newPassword !==
-      confirmPassword
+      newPassword !== confirmPassword
     ) {
       newErrors.confirmPassword =
         "New passwords do not match.";
@@ -97,6 +80,7 @@ export default function ChangePasswordForm({
 
     setErrors(newErrors);
 
+    // see if any of the error fields exists, and search for one error / if there's an error, then it returns false because of the !
     return !Object.values(
       newErrors
     ).some(Boolean);
@@ -116,9 +100,9 @@ export default function ChangePasswordForm({
   }
 
   async function handleSubmit(
-    event: React.SubmitEvent<HTMLFormElement>
+    e: React.SubmitEvent<HTMLFormElement>
   ) {
-    event.preventDefault();
+    e.preventDefault();
 
     if (isSubmitting) return;
     if (!validate()) return;
@@ -182,9 +166,9 @@ export default function ChangePasswordForm({
               type="password"
               autoComplete="current-password"
               value={currentPassword}
-              onChange={(event) => {
+              onChange={(e) => {
                 setCurrentPassword(
-                  event.target.value
+                  e.target.value
                 );
 
                 clearFieldError(
@@ -192,8 +176,8 @@ export default function ChangePasswordForm({
                 );
               }}
               className={`form-control ${errors.currentPassword
-                  ? "form-control-error"
-                  : ""
+                ? "form-control-error"
+                : ""
                 }`}
             />
 
@@ -223,9 +207,9 @@ export default function ChangePasswordForm({
                 type="password"
                 autoComplete="new-password"
                 value={newPassword}
-                onChange={(event) => {
+                onChange={(e) => {
                   setNewPassword(
-                    event.target.value
+                    e.target.value
                   );
 
                   clearFieldError(
@@ -233,8 +217,8 @@ export default function ChangePasswordForm({
                   );
                 }}
                 className={`form-control ${errors.newPassword
-                    ? "form-control-error"
-                    : ""
+                  ? "form-control-error"
+                  : ""
                   }`}
               />
 
@@ -261,9 +245,9 @@ export default function ChangePasswordForm({
                 type="password"
                 autoComplete="new-password"
                 value={confirmPassword}
-                onChange={(event) => {
+                onChange={(e) => {
                   setConfirmPassword(
-                    event.target.value
+                    e.target.value
                   );
 
                   clearFieldError(
@@ -271,8 +255,8 @@ export default function ChangePasswordForm({
                   );
                 }}
                 className={`form-control ${errors.confirmPassword
-                    ? "form-control-error"
-                    : ""
+                  ? "form-control-error"
+                  : ""
                   }`}
               />
 
