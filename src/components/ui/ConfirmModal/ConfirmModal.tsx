@@ -57,7 +57,7 @@ export default function ConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="modal-overlay z-[70] flex items-center justify-center p-4"
       onClick={handleCancel}
     >
       <div
@@ -65,20 +65,14 @@ export default function ConfirmModal({
         aria-modal="true"
         aria-labelledby="confirm-modal-title"
         aria-describedby="confirm-modal-message"
-        className="modal-panel w-full max-w-md rounded-xl p-6 shadow-lg"
+        className="modal-panel w-full max-w-md rounded-[14px] p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2
-          id="confirm-modal-title"
-          className="text-xl font-bold"
-        >
+        <h2 id="confirm-modal-title" className="text-lg font-semibold tracking-[-0.02em]">
           {title}
         </h2>
 
-        <p
-          id="confirm-modal-message"
-          className="mt-3 muted-text"
-        >
+        <p id="confirm-modal-message" className="mt-3 muted-text">
           {message}
         </p>
 
@@ -96,11 +90,9 @@ export default function ConfirmModal({
             type="button"
             onClick={handleConfirm}
             disabled={isConfirming}
-            className="rounded-lg bg-red-600 px-4 py-2 text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg border border-[var(--danger)] bg-[var(--danger)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isConfirming
-              ? "Deleting..."
-              : "Delete"}
+            {isConfirming ? "Deleting..." : "Delete"}
           </button>
         </div>
       </div>

@@ -13,9 +13,7 @@ type AuthFailure = {
   response: NextResponse;
 };
 
-type AuthResult =
-  | AuthSuccess
-  | AuthFailure;
+type AuthResult = AuthSuccess | AuthFailure;
 
 // if the user isn't logged in = error object, if it is logged in === responde: null
 export async function requireAuthenticatedUser(): Promise<AuthResult> {
@@ -43,17 +41,13 @@ export async function requireAuthenticatedUser(): Promise<AuthResult> {
 }
 
 export async function requireAdmin(): Promise<AuthResult> {
-  const result =
-    await requireAuthenticatedUser();
+  const result = await requireAuthenticatedUser();
 
   if (result.response) {
     return result;
   }
 
-  if (
-    result.session.user.role !==
-    "Admin"
-  ) {
+  if (result.session.user.role !== "Admin") {
     return {
       session: null,
 
@@ -72,20 +66,15 @@ export async function requireAdmin(): Promise<AuthResult> {
 }
 
 export async function requireManagerOrAdmin(): Promise<AuthResult> {
-  const result =
-    await requireAuthenticatedUser();
+  const result = await requireAuthenticatedUser();
 
   if (result.response) {
     return result;
   }
 
-  const role =
-    result.session.user.role;
+  const role = result.session.user.role;
 
-  if (
-    role !== "Admin" &&
-    role !== "Manager"
-  ) {
+  if (role !== "Admin" && role !== "Manager") {
     return {
       session: null,
 

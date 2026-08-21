@@ -1,13 +1,11 @@
 export type Settings = {
   name: string;
   email: string;
-  company: string;
-  emailNotifications: boolean;
+  workspaceName: string;
 };
 
 export type SettingsInput = {
   name: string;
   email: string;
-  company?: string;
-  emailNotifications: boolean;
+  workspaceName?: string;
 };

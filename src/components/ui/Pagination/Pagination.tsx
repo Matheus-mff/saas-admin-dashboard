@@ -4,38 +4,37 @@ type PaginationProps = {
   onPageChange: (page: number) => void;
 };
 
-export default function Pagination({
-  currentPage,
-  totalPages,
-  onPageChange,
-}: PaginationProps) {
+export default function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
   return (
-    <div className="mt-6 flex items-center justify-center gap-2">
+    <div className="mt-5 flex items-center justify-center gap-1.5">
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="secondary-button disabled:opacity-50"
+        className="secondary-button disabled:opacity-40"
       >
         Previous
       </button>
 
-      {Array.from({ length: totalPages }, (_, index) => (
-        <button
-          key={index}
-          onClick={() => onPageChange(index + 1)}
-          className={`rounded-lg px-3 py-2 ${currentPage === index + 1
-              ? "bg-blue-600 text-white"
-              : "secondary-button"
-            }`}
-        >
-          {index + 1}
-        </button>
-      ))}
+      {Array.from({ length: totalPages }, (_, index) => {
+        const page = index + 1;
+        const isCurrent = currentPage === page;
+
+        return (
+          <button
+            key={page}
+            onClick={() => onPageChange(page)}
+            aria-current={isCurrent ? "page" : undefined}
+            className={isCurrent ? "primary-button min-w-10 px-3" : "secondary-button min-w-10 px-3"}
+          >
+            {page}
+          </button>
+        );
+      })}
 
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="secondary-button disabled:opacity-50"
+        className="secondary-button disabled:opacity-40"
       >
         Next
       </button>

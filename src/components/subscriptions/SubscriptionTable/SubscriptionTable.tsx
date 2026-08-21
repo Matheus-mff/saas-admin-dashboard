@@ -1,25 +1,28 @@
-import {
-  SUBSCRIPTION_STATUSES,
-  SubscriptionStatus,
-} from "@/constants/subscriptionStatuses";
+import SubscriptionStatusMenu from "@/components/subscriptions/SubscriptionStatusMenu/SubscriptionStatusMenu";
+import SortableHeader from "@/components/ui/SortableHeader/SortableHeader";
 
+import { SubscriptionStatus } from "@/constants/subscriptionStatuses";
+
+import { SortDirection, SubscriptionSortField } from "@/types/sort";
 import { Subscription } from "@/types/subscription";
 
 import { getSubscriptionStatusClass } from "@/utils/getSubscriptionStatusClass";
 
 type SubscriptionTableProps = {
   subscriptions: Subscription[];
+  sortField: SubscriptionSortField;
+  sortDirection: SortDirection;
   canManage: boolean;
-
-  onStatusChange: (
-    id: number,
-    status: SubscriptionStatus
-  ) => void | Promise<void>;
+  onSort: (field: SubscriptionSortField) => void;
+  onStatusChange: (id: number, status: SubscriptionStatus) => void | Promise<void>;
 };
 
 export default function SubscriptionTable({
   subscriptions,
+  sortField,
+  sortDirection,
   canManage,
+  onSort,
   onStatusChange,
 }: SubscriptionTableProps) {
   return (
@@ -28,138 +31,110 @@ export default function SubscriptionTable({
         <table className="w-full min-w-[900px] table-fixed">
           <thead className="table-header">
             <tr>
-              <th className="w-[28%] px-6 py-3 text-left">
-                Customer
-              </th>
+              <SortableHeader
+                label="Customer"
+                field="customer"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                className="w-[28%]"
+              />
 
-              <th className="w-[18%] px-6 py-3 text-left">
-                Plan
-              </th>
+              <SortableHeader
+                label="Plan"
+                field="plan"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                className="w-[18%]"
+              />
 
-              <th className="w-[18%] px-6 py-3 text-left">
-                Price
-              </th>
+              <SortableHeader
+                label="Price"
+                field="price"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                className="w-[18%]"
+              />
 
-              <th className="w-[18%] px-6 py-3 text-left">
-                Started
-              </th>
+              <SortableHeader
+                label="Started"
+                field="started"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                className="w-[18%]"
+              />
 
-              <th className="w-[18%] px-6 py-3 text-center">
-                Status
-              </th>
+              <SortableHeader
+                label="Status"
+                field="status"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                align="center"
+                className="w-[18%]"
+              />
             </tr>
           </thead>
 
           <tbody>
-            {subscriptions.map(
-              (subscription) => (
-                <tr
-                  key={
-                    subscription.id
-                  }
-                  className="table-row"
-                >
-                  <td className="px-6 py-4">
-                    <p className="font-medium">
-                      {
-                        subscription
-                          .customer.name
-                      }
-                    </p>
+            {subscriptions.map((subscription) => (
+              <tr key={subscription.id} className="table-row">
+                <td className="px-6 py-3.5">
+                  <p className="truncate font-medium" title={subscription.customer.name}>
+                    {subscription.customer.name}
+                  </p>
 
-                    <p className="mt-1 text-sm muted-text">
-                      {subscription
-                        .customer
-                        .company ?? "—"}
-                    </p>
-                  </td>
+                  <p
+                    className="mt-1 truncate text-sm muted-text"
+                    title={subscription.customer.company ?? undefined}
+                  >
+                    {subscription.customer.company ?? "—"}
+                  </p>
+                </td>
 
-                  <td className="px-6 py-4">
-                    {
-                      subscription
-                        .plan.name
-                    }
-                  </td>
+                <td className="px-6 py-3.5">
+                  <p className="truncate" title={subscription.plan.name}>
+                    {subscription.plan.name}
+                  </p>
+                </td>
 
-                  <td className="px-6 py-4">
-                    $
-                    {subscription.plan.monthlyPrice.toLocaleString(
-                      "en-US",
-                      {
-                        minimumFractionDigits:
-                          2,
-                        maximumFractionDigits:
-                          2,
-                      }
-                    )}
-                    /month
-                  </td>
+                <td className="px-6 py-3.5 font-medium tabular-nums">
+                  $
+                  {subscription.plan.monthlyPrice.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                  /month
+                </td>
 
-                  <td className="px-6 py-4">
-                    {new Date(
-                      subscription.startedAt
-                    ).toLocaleDateString(
-                      "en-US",
-                      {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      }
-                    )}
-                  </td>
+                <td className="px-6 py-3.5">
+                  {new Date(subscription.startedAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </td>
 
-                  <td className="px-6 py-4 text-center">
-                    {canManage ? (
-                      <select
-                        value={
-                          subscription.status
-                        }
-                        onChange={(
-                          event
-                        ) => {
-                          void onStatusChange(
-                            subscription.id,
-                            event.target
-                              .value as SubscriptionStatus
-                          );
-                        }}
-                        className={`form-control mx-auto max-w-36 text-center font-medium ${getSubscriptionStatusClass(
-                          subscription.status
-                        )}`}
-                        aria-label={`Status for ${subscription.customer.name}`}
-                      >
-                        {SUBSCRIPTION_STATUSES.map(
-                          (status) => (
-                            <option
-                              key={
-                                status
-                              }
-                              value={
-                                status
-                              }
-                            >
-                              {
-                                status
-                              }
-                            </option>
-                          )
-                        )}
-                      </select>
-                    ) : (
-                      <span
-                        className={`status-badge ${getSubscriptionStatusClass(
-                          subscription.status
-                        )}`}
-                      >
-                        {
-                          subscription.status
-                        }
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              )
-            )}
+                <td className="px-6 py-3.5 text-center">
+                  {canManage ? (
+                    <SubscriptionStatusMenu
+                      status={subscription.status}
+                      customerName={subscription.customer.name}
+                      onChange={(status) => onStatusChange(subscription.id, status)}
+                    />
+                  ) : (
+                    <span
+                      className={`status-badge ${getSubscriptionStatusClass(subscription.status)}`}
+                    >
+                      {subscription.status}
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

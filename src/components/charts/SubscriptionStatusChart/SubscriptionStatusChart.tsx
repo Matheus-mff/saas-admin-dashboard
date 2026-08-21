@@ -8,24 +8,14 @@ type SubscriptionStatusChartProps = {
   data: ChartData[];
 };
 
-export default function SubscriptionStatusChart({
-  data,
-}: SubscriptionStatusChartProps) {
-  const hasSubscriptions =
-    data.some(
-      (item) => item.value > 0
-    );
+export default function SubscriptionStatusChart({ data }: SubscriptionStatusChartProps) {
+  const hasSubscriptions = data.some((item) => item.value > 0);
 
   return (
-    <div className="card p-6">
-      <h2 className="text-lg font-semibold">
-        Subscription Status
-      </h2>
+    <div className="card p-5 sm:p-6">
+      <h2 className="section-title">Subscription Status</h2>
 
-      <p className="mt-1 text-sm muted-text">
-        Current subscription lifecycle
-        distribution.
-      </p>
+      <p className="mt-1 text-sm muted-text">Current subscription lifecycle distribution.</p>
 
       {hasSubscriptions ? (
         <BarChart
@@ -33,7 +23,7 @@ export default function SubscriptionStatusChart({
           data={data}
           index="name"
           categories={["value"]}
-          colors={["blue"]}
+          colors={["brand"]}
           showLegend={false}
           allowDecimals={false}
           yAxisWidth={35}
@@ -41,14 +31,9 @@ export default function SubscriptionStatusChart({
       ) : (
         <div className="flex h-[300px] items-center justify-center text-center">
           <div>
-            <p className="font-medium">
-              No subscription data
-            </p>
+            <p className="font-medium">No subscription data</p>
 
-            <p className="mt-1 text-sm muted-text">
-              Subscription statuses will
-              appear here.
-            </p>
+            <p className="mt-1 text-sm muted-text">Subscription statuses will appear here.</p>
           </div>
         </div>
       )}

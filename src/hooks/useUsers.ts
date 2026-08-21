@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 
-import {
-  createUser,
-  deleteUser,
-  getUsers,
-  updateUser,
-} from "@/services/userService";
+import { createUser, deleteUser, getUsers, updateUser } from "@/services/userService";
 
 import { User, UserInput } from "@/types/user";
 
@@ -23,7 +18,7 @@ export function useUsers() {
 
       setUsers(data);
     } catch {
-      setError("Unable to load users.");
+      setError("Unable to load members.");
     } finally {
       setLoading(false);
     }
@@ -32,26 +27,16 @@ export function useUsers() {
   async function addUser(user: UserInput) {
     const newUser = await createUser(user);
 
-    setUsers((previousUsers) => [
-      newUser,
-      ...previousUsers,
-    ]);
+    setUsers((prev) => [newUser, ...prev]);
 
     return newUser;
   }
 
-  async function editUser(
-    id: number,
-    user: UserInput
-  ) {
+  async function editUser(id: number, user: UserInput) {
     const updatedUser = await updateUser(id, user);
 
-    setUsers((previousUsers) =>
-      previousUsers.map((currentUser) =>
-        currentUser.id === id
-          ? updatedUser
-          : currentUser
-      )
+    setUsers((prev) =>
+      prev.map((currentUser) => (currentUser.id === id ? updatedUser : currentUser))
     );
 
     return updatedUser;
@@ -60,9 +45,7 @@ export function useUsers() {
   async function removeUser(id: number) {
     await deleteUser(id);
 
-    setUsers((previousUsers) =>
-      previousUsers.filter((user) => user.id !== id)
-    );
+    setUsers((prev) => prev.filter((user) => user.id !== id));
   }
 
   useEffect(() => {
@@ -77,7 +60,7 @@ export function useUsers() {
       .catch(() => {
         if (cancelled) return;
 
-        setError("Unable to load users.");
+        setError("Unable to load members.");
       })
       .finally(() => {
         if (cancelled) return;

@@ -2,15 +2,11 @@
 
 import { useState } from "react";
 
-import {
-  USER_ROLES,
-  UserRole,
-} from "@/constants/userRoles";
+import { MAX_EMAIL_LENGTH } from "@/constants/emailRules";
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@/constants/passwordRules";
+import { USER_ROLES, UserRole } from "@/constants/userRoles";
 
-import {
-  User,
-  UserInput,
-} from "@/types/user";
+import { User, UserInput } from "@/types/user";
 
 type UserFormProps = {
   user?: User;
@@ -25,21 +21,13 @@ type FormErrors = {
   password: string;
 };
 
-export default function UserForm({
-  user,
-  onSubmit,
-  onCancel,
-}: UserFormProps) {
+export default function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
   const isEditing = Boolean(user);
 
   const [name, setName] = useState(user?.name ?? "");
-
   const [email, setEmail] = useState(user?.email ?? "");
-
   const [role, setRole] = useState<UserRole | "">(user?.role ?? "");
-
   const [password, setPassword] = useState("");
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [errors, setErrors] = useState<FormErrors>({
@@ -57,15 +45,22 @@ export default function UserForm({
       password: "",
     };
 
-    if (!name.trim()) {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName) {
       newErrors.name = "Name is required.";
+    } else if (trimmedName.length < 2) {
+      newErrors.name = "Name must contain at least 2 characters.";
+    } else if (trimmedName.length > 100) {
+      newErrors.name = "Name is too long.";
     }
 
-    if (!email.trim()) {
+    if (!trimmedEmail) {
       newErrors.email = "Email is required.";
-    } else if (
-      !/\S+@\S+\.\S+/.test(email)
-    ) {
+    } else if (trimmedEmail.length > MAX_EMAIL_LENGTH) {
+      newErrors.email = `Email must contain at most ${MAX_EMAIL_LENGTH} characters.`;
+    } else if (!/\S+@\S+\.\S+/.test(trimmedEmail)) {
       newErrors.email = "Please enter a valid email.";
     }
 
@@ -75,28 +70,20 @@ export default function UserForm({
 
     if (!isEditing) {
       if (!password) {
-        newErrors.password = "Temporary password is required.";
-      } else if (
-        password.length < 8
-      ) {
-        newErrors.password = "Password must contain at least 8 characters.";
-      } else if (
-        password.length > 100
-      ) {
-        newErrors.password = "Password is too long.";
+        newErrors.password = "Password is required.";
+      } else if (password.length < MIN_PASSWORD_LENGTH) {
+        newErrors.password = `Password must contain at least ${MIN_PASSWORD_LENGTH} characters.`;
+      } else if (password.length > MAX_PASSWORD_LENGTH) {
+        newErrors.password = `Password must contain at most ${MAX_PASSWORD_LENGTH} characters.`;
       }
     }
 
     setErrors(newErrors);
 
-    return !Object.values(
-      newErrors
-    ).some(Boolean);
+    return !Object.values(newErrors).some(Boolean);
   }
 
-  async function handleSubmit(
-    e: React.SubmitEvent<HTMLFormElement>
-  ) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (isSubmitting) return;
@@ -107,9 +94,7 @@ export default function UserForm({
     try {
       await onSubmit({
         name: name.trim(),
-        email: email
-          .trim()
-          .toLowerCase(),
+        email: email.trim().toLowerCase(),
         role,
         ...(!isEditing && {
           password,
@@ -121,16 +106,10 @@ export default function UserForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <fieldset
-        disabled={isSubmitting}
-        className="contents"
-      >
+    <form onSubmit={handleSubmit} noValidate>
+      <fieldset disabled={isSubmitting} className="contents">
         <div className="mb-4">
-          <label
-            htmlFor="user-name"
-            className="mb-1 block font-medium"
-          >
+          <label htmlFor="user-name" className="mb-2 block text-sm font-semibold">
             Name
           </label>
 
@@ -143,35 +122,24 @@ export default function UserForm({
               setName(e.target.value);
 
               if (errors.name) {
-                setErrors(
-                  (previousErrors) => ({
-                    ...previousErrors,
-                    name: "",
-                  })
-                );
+                setErrors((prev) => ({
+                  ...prev,
+                  name: "",
+                }));
               }
             }}
-            className={`form-control ${errors.name
-              ? "form-control-error"
-              : ""
-              }`}
+            className={`form-control ${errors.name ? "form-control-error" : ""}`}
           />
 
           {errors.name && (
-            <p
-              className="mt-1 text-sm text-red-500"
-              role="alert"
-            >
+            <p className="mt-1 text-sm text-[var(--danger)]" role="alert">
               {errors.name}
             </p>
           )}
         </div>
 
         <div className="mb-4">
-          <label
-            htmlFor="user-email"
-            className="mb-1 block font-medium"
-          >
+          <label htmlFor="user-email" className="mb-2 block text-sm font-semibold">
             Email
           </label>
 
@@ -180,41 +148,29 @@ export default function UserForm({
             type="email"
             autoComplete="email"
             value={email}
+            maxLength={MAX_EMAIL_LENGTH}
             onChange={(e) => {
-              setEmail(
-                e.target.value
-              );
+              setEmail(e.target.value);
 
               if (errors.email) {
-                setErrors(
-                  (previousErrors) => ({
-                    ...previousErrors,
-                    email: "",
-                  })
-                );
+                setErrors((prev) => ({
+                  ...prev,
+                  email: "",
+                }));
               }
             }}
-            className={`form-control ${errors.email
-              ? "form-control-error"
-              : ""
-              }`}
+            className={`form-control ${errors.email ? "form-control-error" : ""}`}
           />
 
           {errors.email && (
-            <p
-              className="mt-1 text-sm text-red-500"
-              role="alert"
-            >
+            <p className="mt-1 text-sm text-[var(--danger)]" role="alert">
               {errors.email}
             </p>
           )}
         </div>
 
         <div className="mb-4">
-          <label
-            htmlFor="user-role"
-            className="mb-1 block font-medium"
-          >
+          <label htmlFor="user-role" className="mb-2 block text-sm font-semibold">
             Role
           </label>
 
@@ -225,43 +181,27 @@ export default function UserForm({
               setRole(e.target.value as UserRole);
 
               if (errors.role) {
-                setErrors(
-                  (previousErrors) => ({
-                    ...previousErrors,
-                    role: "",
-                  })
-                );
+                setErrors((prev) => ({
+                  ...prev,
+                  role: "",
+                }));
               }
             }}
-            className={`form-control ${errors.role
-              ? "form-control-error"
-              : ""
-              }`}
+            className={`form-control ${errors.role ? "form-control-error" : ""}`}
           >
-            <option
-              value=""
-              disabled
-            >
+            <option value="" disabled>
               Select a role
             </option>
 
-            {USER_ROLES.map(
-              (userRole) => (
-                <option
-                  key={userRole}
-                  value={userRole}
-                >
-                  {userRole}
-                </option>
-              )
-            )}
+            {USER_ROLES.map((userRole) => (
+              <option key={userRole} value={userRole}>
+                {userRole}
+              </option>
+            ))}
           </select>
 
           {errors.role && (
-            <p
-              className="mt-1 text-sm text-red-500"
-              role="alert"
-            >
+            <p className="mt-1 text-sm text-[var(--danger)]" role="alert">
               {errors.role}
             </p>
           )}
@@ -269,11 +209,8 @@ export default function UserForm({
 
         {!isEditing && (
           <div className="mb-6">
-            <label
-              htmlFor="user-password"
-              className="mb-1 block font-medium"
-            >
-              Temporary password
+            <label htmlFor="user-password" className="mb-2 block text-sm font-semibold">
+              Password
             </label>
 
             <input
@@ -281,34 +218,25 @@ export default function UserForm({
               type="password"
               autoComplete="new-password"
               value={password}
+              minLength={MIN_PASSWORD_LENGTH}
+              maxLength={MAX_PASSWORD_LENGTH}
               onChange={(e) => {
                 setPassword(e.target.value);
 
                 if (errors.password) {
-                  setErrors(
-                    (previousErrors) => ({
-                      ...previousErrors,
-                      password: "",
-                    })
-                  );
+                  setErrors((prev) => ({
+                    ...prev,
+                    password: "",
+                  }));
                 }
               }}
-              className={`form-control ${errors.password
-                ? "form-control-error"
-                : ""
-                }`}
+              className={`form-control ${errors.password ? "form-control-error" : ""}`}
             />
 
-            <p className="mt-1 text-sm muted-text">
-              The member will use this
-              password to sign in.
-            </p>
+            <p className="mt-1 text-sm muted-text">The member will use this password to sign in.</p>
 
             {errors.password && (
-              <p
-                className="mt-1 text-sm text-red-500"
-                role="alert"
-              >
+              <p className="mt-1 text-sm text-[var(--danger)]" role="alert">
                 {errors.password}
               </p>
             )}
@@ -316,23 +244,12 @@ export default function UserForm({
         )}
 
         <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="secondary-button"
-          >
+          <button type="button" onClick={onCancel} className="secondary-button">
             Cancel
           </button>
 
-          <button
-            type="submit"
-            className="primary-button"
-          >
-            {isSubmitting
-              ? "Saving..."
-              : isEditing
-                ? "Save Changes"
-                : "Create Member"}
+          <button type="submit" className="primary-button">
+            {isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Create Member"}
           </button>
         </div>
       </fieldset>

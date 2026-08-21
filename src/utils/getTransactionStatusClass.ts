@@ -1,8 +1,6 @@
 import { TransactionStatus } from "@/constants/transactionStatuses";
 
-export function getTransactionStatusClass(
-  status: TransactionStatus
-) {
+export function getTransactionStatusClass(status: TransactionStatus) {
   switch (status) {
     case "Paid":
       return "status-paid";

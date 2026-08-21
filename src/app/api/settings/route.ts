@@ -1,91 +1,66 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { MAX_EMAIL_LENGTH } from "@/constants/emailRules";
+
 import { requireAuthenticatedUser } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
+
+const PROTECTED_DEMO_EMAILS = ["admin@email.com", "manager@email.com", "user@email.com"];
 
 const updateSettingsSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(
-      1,
-      "Name is required."
-    )
-    .max(
-      100,
-      "Name is too long."
-    ),
+    .min(2, "Name must contain at least 2 characters.")
+    .max(100, "Name is too long."),
 
-  email: z.email({
-    error:
-      "Please enter a valid email.",
-  }),
-
-  company: z
+  email: z
     .string()
     .trim()
-    .min(
-      1,
-      "Workspace name is required."
-    )
-    .max(
-      100,
-      "Workspace name is too long."
-    )
-    .optional(),
+    .max(MAX_EMAIL_LENGTH, `Email must contain at most ${MAX_EMAIL_LENGTH} characters.`)
+    .pipe(
+      z.email({
+        error: "Please enter a valid email.",
+      })
+    ),
 
-  emailNotifications:
-    z.boolean(),
+  workspaceName: z
+    .string()
+    .trim()
+    .min(2, "Workspace name must contain at least 2 characters.")
+    .max(100, "Workspace name is too long.")
+    .optional(),
 });
 
-function parseUserId(
-  id: string
-): number | null {
+function parseUserId(id: string): number | null {
   const parsedId = Number(id);
 
-  if (
-    !Number.isInteger(parsedId) ||
-    parsedId <= 0
-  ) {
+  if (!Number.isInteger(parsedId) || parsedId <= 0) {
     return null;
   }
 
   return parsedId;
 }
 
-function isUniqueConstraintError(
-  error: unknown
-): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "P2002"
-  );
+function isUniqueConstraintError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }
 
 export async function GET() {
-  const authResult =
-    await requireAuthenticatedUser();
+  const authResult = await requireAuthenticatedUser();
 
   if (authResult.response) {
     return authResult.response;
   }
 
-  const userId = parseUserId(
-    authResult.session.user.id
-  );
-
-  const workspaceId =
-    authResult.session.user
-      .workspaceId;
+  const userId = parseUserId(authResult.session.user.id);
+  const workspaceId = authResult.session.user.workspaceId;
 
   if (!userId) {
     return NextResponse.json(
       {
-        message:
-          "Invalid session user.",
+        message: "Invalid session user.",
       },
       {
         status: 401,
@@ -94,31 +69,28 @@ export async function GET() {
   }
 
   try {
-    const user =
-      await prisma.user.findFirst({
-        where: {
-          id: userId,
-          workspaceId,
-        },
+    const user = await prisma.user.findFirst({
+      where: {
+        id: userId,
+        workspaceId,
+      },
 
-        select: {
-          name: true,
-          email: true,
-          emailNotifications: true,
+      select: {
+        name: true,
+        email: true,
 
-          workspace: {
-            select: {
-              name: true,
-            },
+        workspace: {
+          select: {
+            name: true,
           },
         },
-      });
+      },
+    });
 
     if (!user) {
       return NextResponse.json(
         {
-          message:
-            "User not found.",
+          message: "User not found.",
         },
         {
           status: 404,
@@ -129,21 +101,14 @@ export async function GET() {
     return NextResponse.json({
       name: user.name,
       email: user.email,
-      company:
-        user.workspace.name,
-      emailNotifications:
-        user.emailNotifications,
+      workspaceName: user.workspace.name,
     });
   } catch (error) {
-    console.error(
-      "GET /api/settings failed:",
-      error
-    );
+    console.error("GET /api/settings failed:", error);
 
     return NextResponse.json(
       {
-        message:
-          "Unable to load settings.",
+        message: "Unable to load settings.",
       },
       {
         status: 500,
@@ -152,33 +117,21 @@ export async function GET() {
   }
 }
 
-export async function PATCH(
-  request: Request
-) {
-  const authResult =
-    await requireAuthenticatedUser();
+export async function PATCH(request: Request) {
+  const authResult = await requireAuthenticatedUser();
 
   if (authResult.response) {
     return authResult.response;
   }
 
-  const userId = parseUserId(
-    authResult.session.user.id
-  );
-
-  const workspaceId =
-    authResult.session.user
-      .workspaceId;
-
-  const isAdmin =
-    authResult.session.user.role ===
-    "Admin";
+  const userId = parseUserId(authResult.session.user.id);
+  const workspaceId = authResult.session.user.workspaceId;
+  const isAdmin = authResult.session.user.role === "Admin";
 
   if (!userId) {
     return NextResponse.json(
       {
-        message:
-          "Invalid session user.",
+        message: "Invalid session user.",
       },
       {
         status: 401,
@@ -187,21 +140,13 @@ export async function PATCH(
   }
 
   try {
-    const body: unknown =
-      await request.json();
-
-    const parsedBody =
-      updateSettingsSchema.safeParse(
-        body
-      );
+    const body: unknown = await request.json();
+    const parsedBody = updateSettingsSchema.safeParse(body);
 
     if (!parsedBody.success) {
       return NextResponse.json(
         {
-          message:
-            parsedBody.error
-              .issues[0]?.message ??
-            "Invalid settings data.",
+          message: parsedBody.error.issues[0]?.message ?? "Invalid settings data.",
         },
         {
           status: 400,
@@ -209,29 +154,14 @@ export async function PATCH(
       );
     }
 
-    const name =
-      parsedBody.data.name;
+    const name = parsedBody.data.name;
+    const email = parsedBody.data.email.trim().toLowerCase();
+    const workspaceName = parsedBody.data.workspaceName;
 
-    const email =
-      parsedBody.data.email
-        .trim()
-        .toLowerCase();
-
-    const company =
-      parsedBody.data.company;
-
-    const emailNotifications =
-      parsedBody.data
-        .emailNotifications;
-
-    if (
-      !isAdmin &&
-      company !== undefined
-    ) {
+    if (!isAdmin && workspaceName !== undefined) {
       return NextResponse.json(
         {
-          message:
-            "Only an Admin can update the workspace name.",
+          message: "Only an Admin can update the workspace name.",
         },
         {
           status: 403,
@@ -239,26 +169,20 @@ export async function PATCH(
       );
     }
 
-    const userWithSameEmail =
-      await prisma.user.findUnique({
-        where: {
-          email,
-        },
+    const userWithSameEmail = await prisma.user.findUnique({
+      where: {
+        email,
+      },
 
-        select: {
-          id: true,
-        },
-      });
+      select: {
+        id: true,
+      },
+    });
 
-    if (
-      userWithSameEmail &&
-      userWithSameEmail.id !==
-      userId
-    ) {
+    if (userWithSameEmail && userWithSameEmail.id !== userId) {
       return NextResponse.json(
         {
-          message:
-            "A user with this email already exists.",
+          message: "A user with this email already exists.",
         },
         {
           status: 409,
@@ -266,23 +190,23 @@ export async function PATCH(
       );
     }
 
-    const existingUser =
-      await prisma.user.findFirst({
-        where: {
-          id: userId,
-          workspaceId,
-        },
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        id: userId,
+        workspaceId,
+      },
 
-        select: {
-          id: true,
-        },
-      });
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
 
     if (!existingUser) {
       return NextResponse.json(
         {
-          message:
-            "User not found.",
+          message: "User not found.",
         },
         {
           status: 404,
@@ -290,8 +214,24 @@ export async function PATCH(
       );
     }
 
-    const updatedUser =
-      await prisma.user.update({
+    // Demo reviewers must not be able to change the published demo credentials.
+    // Admins can still update the workspace name as long as their own profile stays unchanged.
+    if (
+      PROTECTED_DEMO_EMAILS.includes(existingUser.email) &&
+      (name !== existingUser.name || email !== existingUser.email)
+    ) {
+      return NextResponse.json(
+        {
+          message: "Demo account profile details cannot be edited.",
+        },
+        {
+          status: 403,
+        }
+      );
+    }
+
+    const savedSettings = await prisma.$transaction(async (tx) => {
+      const updatedUser = await tx.user.update({
         where: {
           id: userId,
           workspaceId,
@@ -300,82 +240,52 @@ export async function PATCH(
         data: {
           name,
           email,
-          emailNotifications,
         },
 
         select: {
           name: true,
           email: true,
-          emailNotifications: true,
         },
       });
 
-    let workspaceName: string;
-
-    if (
-      isAdmin &&
-      company !== undefined
-    ) {
-      const updatedWorkspace =
-        await prisma.workspace.update({
-          where: {
-            id: workspaceId,
-          },
-
-          data: {
-            name: company,
-          },
-
-          select: {
-            name: true,
-          },
-        });
-
-      workspaceName =
-        updatedWorkspace.name;
-    } else {
       const workspace =
-        await prisma.workspace.findUnique({
-          where: {
-            id: workspaceId,
-          },
+        isAdmin && workspaceName !== undefined
+          ? await tx.workspace.update({
+              where: {
+                id: workspaceId,
+              },
 
-          select: {
-            name: true,
-          },
-        });
+              data: {
+                name: workspaceName,
+              },
 
-      if (!workspace) {
-        return NextResponse.json(
-          {
-            message:
-              "Workspace not found.",
-          },
-          {
-            status: 404,
-          }
-        );
-      }
+              select: {
+                name: true,
+              },
+            })
+          : await tx.workspace.findUniqueOrThrow({
+              where: {
+                id: workspaceId,
+              },
 
-      workspaceName =
-        workspace.name;
-    }
+              select: {
+                name: true,
+              },
+            });
 
-    return NextResponse.json({
-      name: updatedUser.name,
-      email: updatedUser.email,
-      company: workspaceName,
-      emailNotifications:
-        updatedUser.emailNotifications,
+      return {
+        name: updatedUser.name,
+        email: updatedUser.email,
+        workspaceName: workspace.name,
+      };
     });
+
+    return NextResponse.json(savedSettings);
   } catch (error) {
-    if (
-      isUniqueConstraintError(error)
-    ) {
+    if (isUniqueConstraintError(error)) {
       return NextResponse.json(
         {
-          message:
-            "A user with this email already exists.",
+          message: "A user with this email already exists.",
         },
         {
           status: 409,
@@ -383,15 +293,11 @@ export async function PATCH(
       );
     }
 
-    console.error(
-      "PATCH /api/settings failed:",
-      error
-    );
+    console.error("PATCH /api/settings failed:", error);
 
     return NextResponse.json(
       {
-        message:
-          "Unable to save settings.",
+        message: "Unable to save settings.",
       },
       {
         status: 500,

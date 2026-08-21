@@ -2,100 +2,74 @@ import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import {
-  requireAdmin,
-  requireAuthenticatedUser,
-} from "@/lib/apiAuth";
+import { MAX_EMAIL_LENGTH } from "@/constants/emailRules";
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@/constants/passwordRules";
+import { USER_ROLES } from "@/constants/userRoles";
 
+import { requireAdmin, requireAuthenticatedUser } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 
 const createUserSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(
-      2,
-      "Name must contain at least 2 characters."
-    )
-    .max(
-      100,
-      "Name is too long."
+    .min(2, "Name must contain at least 2 characters.")
+    .max(100, "Name is too long."),
+
+  email: z
+    .string()
+    .trim()
+    .max(MAX_EMAIL_LENGTH, `Email must contain at most ${MAX_EMAIL_LENGTH} characters.`)
+    .pipe(
+      z.email({
+        error: "Please enter a valid email.",
+      })
     ),
 
-  email: z.email({
-    error:
-      "Please enter a valid email.",
-  }),
-
-  role: z.enum([
-    "Admin",
-    "Manager",
-    "User",
-  ]),
+  role: z.enum(USER_ROLES),
 
   password: z
     .string()
-    .min(
-      8,
-      "Password must contain at least 8 characters."
-    )
-    .max(
-      100,
-      "Password is too long."
-    ),
+    .min(MIN_PASSWORD_LENGTH, `Password must contain at least ${MIN_PASSWORD_LENGTH} characters.`)
+    .max(MAX_PASSWORD_LENGTH, `Password must contain at most ${MAX_PASSWORD_LENGTH} characters.`),
 });
 
-function isUniqueConstraintError(
-  error: unknown
-): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "P2002"
-  );
+function isUniqueConstraintError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }
 
 export async function GET() {
-  const authResult =
-    await requireAuthenticatedUser();
+  const authResult = await requireAuthenticatedUser();
 
   if (authResult.response) {
     return authResult.response;
   }
 
   try {
-    const users =
-      await prisma.user.findMany({
-        where: {
-          workspaceId:
-            authResult.session.user
-              .workspaceId,
-        },
+    const users = await prisma.user.findMany({
+      where: {
+        workspaceId: authResult.session.user.workspaceId,
+      },
 
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-        },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
 
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
     return NextResponse.json(users);
   } catch (error) {
-    console.error(
-      "GET /api/users failed:",
-      error
-    );
+    console.error("GET /api/users failed:", error);
 
     return NextResponse.json(
       {
-        message:
-          "Unable to load users.",
+        message: "Unable to load members.",
       },
       {
         status: 500,
@@ -104,30 +78,22 @@ export async function GET() {
   }
 }
 
-export async function POST(
-  request: Request
-) {
-  const authResult =
-    await requireAdmin();
+export async function POST(request: Request) {
+  const authResult = await requireAdmin();
 
   if (authResult.response) {
     return authResult.response;
   }
 
   try {
-    const body: unknown =
-      await request.json();
+    const body: unknown = await request.json();
 
-    const parsedBody =
-      createUserSchema.safeParse(body);
+    const parsedBody = createUserSchema.safeParse(body);
 
     if (!parsedBody.success) {
       return NextResponse.json(
         {
-          message:
-            parsedBody.error.issues[0]
-              ?.message ??
-            "Invalid user data.",
+          message: parsedBody.error.issues[0]?.message ?? "Invalid member data.",
         },
         {
           status: 400,
@@ -135,39 +101,26 @@ export async function POST(
       );
     }
 
-    const name =
-      parsedBody.data.name;
+    const name = parsedBody.data.name;
+    const email = parsedBody.data.email.trim().toLowerCase();
+    const role = parsedBody.data.role;
 
-    const email =
-      parsedBody.data.email
-        .trim()
-        .toLowerCase();
+    const passwordHash = await hash(parsedBody.data.password, 12);
 
-    const role =
-      parsedBody.data.role;
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        email,
+      },
 
-    const passwordHash =
-      await hash(
-        parsedBody.data.password,
-        12
-      );
-
-    const existingUser =
-      await prisma.user.findUnique({
-        where: {
-          email,
-        },
-
-        select: {
-          id: true,
-        },
-      });
+      select: {
+        id: true,
+      },
+    });
 
     if (existingUser) {
       return NextResponse.json(
         {
-          message:
-            "A user with this email already exists.",
+          message: "A member with this email already exists.",
         },
         {
           status: 409,
@@ -175,41 +128,31 @@ export async function POST(
       );
     }
 
-    const newUser =
-      await prisma.user.create({
-        data: {
-          name,
-          email,
-          role,
-          passwordHash,
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        role,
+        passwordHash,
+        workspaceId: authResult.session.user.workspaceId,
+      },
 
-          workspaceId:
-            authResult.session.user
-              .workspaceId,
-        },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
 
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-        },
-      });
-
-    return NextResponse.json(
-      newUser,
-      {
-        status: 201,
-      }
-    );
+    return NextResponse.json(newUser, {
+      status: 201,
+    });
   } catch (error) {
-    if (
-      isUniqueConstraintError(error)
-    ) {
+    if (isUniqueConstraintError(error)) {
       return NextResponse.json(
         {
-          message:
-            "A user with this email already exists.",
+          message: "A member with this email already exists.",
         },
         {
           status: 409,
@@ -217,15 +160,11 @@ export async function POST(
       );
     }
 
-    console.error(
-      "POST /api/users failed:",
-      error
-    );
+    console.error("POST /api/users failed:", error);
 
     return NextResponse.json(
       {
-        message:
-          "Unable to create user.",
+        message: "Unable to create member.",
       },
       {
         status: 500,

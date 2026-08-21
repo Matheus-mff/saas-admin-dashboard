@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Plus } from "lucide-react";
 
 import UserForm from "@/components/forms/UserForm/UserForm";
 import Button from "@/components/ui/Button/Button";
@@ -9,186 +10,80 @@ import EmptyState from "@/components/ui/EmptyState/EmptyState";
 import ErrorState from "@/components/ui/ErrorState/ErrorState";
 import Modal from "@/components/ui/Modal/Modal";
 import Pagination from "@/components/ui/Pagination/Pagination";
+import SearchInput from "@/components/ui/SearchInput/SearchInput";
 import TableSkeleton from "@/components/ui/Skeleton/TableSkeleton";
-import Table from "@/components/ui/Table/Table";
 import Toast from "@/components/ui/Toast/Toast";
+import UserTable from "@/components/users/UserTable/UserTable";
 
-import {
-  USER_ROLE_FILTERS,
-  UserRoleFilter,
-} from "@/constants/userRoles";
+import { USER_ROLE_FILTERS, UserRoleFilter } from "@/constants/userRoles";
 
 import { useCurrentUser } from "@/contexts/CurrentUserContext";
 
 import { useToast } from "@/hooks/useToast";
 import { useUsers } from "@/hooks/useUsers";
 
-import {
-  SortDirection,
-  SortField,
-} from "@/types/sort";
-
+import { SortDirection, UserSortField } from "@/types/sort";
 import { User } from "@/types/user";
+
+import { matchesSearch } from "@/utils/matchesSearch";
 
 const USERS_PER_PAGE = 10;
 
 export default function UsersPage() {
-  const { isAdmin } =
-    useCurrentUser();
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState<UserSortField>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [roleFilter, setRoleFilter] = useState<UserRoleFilter>("All");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | undefined>();
+  const [userToDelete, setUserToDelete] = useState<User | undefined>();
 
-  const [search, setSearch] =
-    useState("");
+  const { isAdmin } = useCurrentUser();
 
-  const [
-    currentPage,
-    setCurrentPage,
-  ] = useState(1);
+  const { toastMessage, toastType, showToast } = useToast();
 
-  const [
-    sortField,
-    setSortField,
-  ] =
-    useState<SortField>("name");
+  const { users, loading, error, retry, addUser, editUser, removeUser } = useUsers();
 
-  const [
-    sortDirection,
-    setSortDirection,
-  ] =
-    useState<SortDirection>("asc");
+  const filteredUsers = users.filter((user) => {
+    const matchesSearchTerm = matchesSearch(search, [user.name, user.email]);
 
-  const [
-    roleFilter,
-    setRoleFilter,
-  ] =
-    useState<UserRoleFilter>("All");
+    const matchesRole = roleFilter === "All" || user.role === roleFilter;
 
-  const [
-    isModalOpen,
-    setIsModalOpen,
-  ] = useState(false);
+    return matchesSearchTerm && matchesRole;
+  });
 
-  const [
-    selectedUser,
-    setSelectedUser,
-  ] =
-    useState<User | undefined>();
-
-  const [
-    userToDelete,
-    setUserToDelete,
-  ] =
-    useState<User | undefined>();
-
-  const {
-    toastMessage,
-    toastType,
-    showToast,
-  } = useToast();
-
-  const {
-    users,
-    loading,
-    error,
-    retry,
-    addUser,
-    editUser,
-    removeUser,
-  } = useUsers();
-
-  const normalizedSearch =
-    search.trim().toLowerCase();
-
-  const filteredUsers =
-    users.filter((user) => {
-      const matchesSearch =
-        user.name
-          .toLowerCase()
-          .includes(
-            normalizedSearch
-          ) ||
-        user.email
-          .toLowerCase()
-          .includes(
-            normalizedSearch
-          ) ||
-        user.role
-          .toLowerCase()
-          .includes(
-            normalizedSearch
-          );
-
-      const matchesRole =
-        roleFilter === "All" ||
-        user.role === roleFilter;
-
-      return (
-        matchesSearch &&
-        matchesRole
-      );
-    });
-
-  const sortedUsers = [
-    ...filteredUsers,
-  ].sort((a, b) => {
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
     const valueA = a[sortField];
     const valueB = b[sortField];
 
-    if (valueA < valueB) {
-      return sortDirection ===
-        "asc"
-        ? -1
-        : 1;
-    }
+    const comparison =
+      typeof valueA === "number" && typeof valueB === "number"
+        ? valueA - valueB
+        : String(valueA).localeCompare(String(valueB));
 
-    if (valueA > valueB) {
-      return sortDirection ===
-        "asc"
-        ? 1
-        : -1;
-    }
-
-    return 0;
+    return sortDirection === "asc" ? comparison : -comparison;
   });
 
-  const totalPages = Math.ceil(
-    filteredUsers.length /
-    USERS_PER_PAGE
-  );
+  const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
 
-  const validCurrentPage =
-    Math.min(
-      currentPage,
-      Math.max(totalPages, 1)
-    );
+  const validCurrentPage = Math.min(currentPage, Math.max(totalPages, 1));
 
-  const startIndex =
-    (validCurrentPage - 1) *
-    USERS_PER_PAGE;
+  const startIndex = (validCurrentPage - 1) * USERS_PER_PAGE;
 
-  const paginatedUsers =
-    sortedUsers.slice(
-      startIndex,
-      startIndex +
-      USERS_PER_PAGE
-    );
+  const paginatedUsers = sortedUsers.slice(startIndex, startIndex + USERS_PER_PAGE);
 
-  function handleSort(
-    field: SortField
-  ) {
+  function handleSort(field: UserSortField) {
     if (field === sortField) {
-      setSortDirection(
-        (previousDirection) =>
-          previousDirection ===
-            "asc"
-            ? "desc"
-            : "asc"
-      );
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      setCurrentPage(1);
 
       return;
     }
 
     setSortField(field);
     setSortDirection("asc");
+    setCurrentPage(1);
   }
 
   function closeUserModal() {
@@ -197,52 +92,44 @@ export default function UsersPage() {
   }
 
   if (loading) {
-    return <TableSkeleton />;
+    return <TableSkeleton columns={isAdmin ? 5 : 4} showFilters showSearch showAction={isAdmin} />;
   }
 
   if (error) {
-    return (
-      <ErrorState
-        message={error}
-        onRetry={retry}
-      />
-    );
+    return <ErrorState message={error} onRetry={retry} />;
   }
 
   return (
     <div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">
-            Team
-          </h1>
+          <h1 className="page-title">Team</h1>
 
-          <p className="mt-2 muted-text">
-            {isAdmin
-              ? "Manage members of your workspace."
-              : "View members of your workspace."}
+          <p className="page-description">
+            {isAdmin ? "Manage members of your workspace." : "View members of your workspace."}
           </p>
         </div>
 
         {isAdmin && (
           <Button
             onClick={() => {
-              setSelectedUser(
-                undefined
-              );
+              setSelectedUser(undefined);
 
               setIsModalOpen(true);
             }}
           >
-            Add Member
+            <span className="inline-flex items-center gap-2">
+              <Plus size={15} strokeWidth={2} />
+              Add Member
+            </span>
           </Button>
         )}
       </div>
 
-      <div className="mt-8">
-        <div className="mb-6 flex flex-wrap gap-2">
-          {USER_ROLE_FILTERS.map(
-            (role) => (
+      <div className="mt-7">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap gap-2">
+            {USER_ROLE_FILTERS.map((role) => (
               <button
                 key={role}
                 type="button"
@@ -250,84 +137,51 @@ export default function UsersPage() {
                   setRoleFilter(role);
                   setCurrentPage(1);
                 }}
-                className={
-                  roleFilter === role
-                    ? "primary-button"
-                    : "secondary-button"
-                }
+                className={`filter-chip ${roleFilter === role ? "filter-chip-active" : ""}`}
               >
                 {role}
               </button>
-            )
-          )}
+            ))}
+          </div>
+
+          <div className="w-full lg:max-w-md">
+            <SearchInput
+              placeholder="Search team members..."
+              value={search}
+              onChange={(value) => {
+                setSearch(value);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
         </div>
 
-        <input
-          type="search"
-          placeholder="Search team members..."
-          value={search}
-          onChange={(event) => {
-            setSearch(
-              event.target.value
-            );
-
-            setCurrentPage(1);
-          }}
-          className="form-control"
-        />
-
-        <div className="mt-6">
-          {filteredUsers.length ===
-            0 ? (
-            <EmptyState
-              title="No members found"
-              description="Try another search term or role."
-            />
+        <div className="mt-5">
+          {filteredUsers.length === 0 ? (
+            <EmptyState title="No members found" description="Try another search term or role." />
           ) : (
             <>
-              <Table
-                users={
-                  paginatedUsers
-                }
-                sortField={
-                  sortField
-                }
-                sortDirection={
-                  sortDirection
-                }
-                canManage={
-                  isAdmin
-                }
-                onSort={
-                  handleSort
-                }
+              <UserTable
+                users={paginatedUsers}
+                sortField={sortField}
+                sortDirection={sortDirection}
+                canManage={isAdmin}
+                onSort={handleSort}
                 onEdit={(user) => {
-                  setSelectedUser(
-                    user
-                  );
+                  setSelectedUser(user);
 
-                  setIsModalOpen(
-                    true
-                  );
+                  setIsModalOpen(true);
                 }}
                 onDelete={(user) => {
-                  setUserToDelete(
-                    user
-                  );
+                  setUserToDelete(user);
                 }}
               />
 
               {totalPages > 1 && (
                 <Pagination
-                  currentPage={
-                    validCurrentPage
-                  }
-                  totalPages={
-                    totalPages
-                  }
-                  onPageChange={
-                    setCurrentPage
-                  }
+                  currentPage={validCurrentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
                 />
               )}
             </>
@@ -339,113 +193,61 @@ export default function UsersPage() {
         <>
           <Modal
             open={isModalOpen}
-            title={
-              selectedUser
-                ? "Edit Member"
-                : "Add Member"
-            }
-            onClose={
-              closeUserModal
-            }
+            title={selectedUser ? "Edit Member" : "Add Member"}
+            onClose={closeUserModal}
           >
             <UserForm
               user={selectedUser}
-              onCancel={
-                closeUserModal
-              }
-              onSubmit={async (
-                user
-              ) => {
+              onCancel={closeUserModal}
+              onSubmit={async (user) => {
                 try {
-                  if (
-                    selectedUser
-                  ) {
-                    await editUser(
-                      selectedUser.id,
-                      user
-                    );
+                  if (selectedUser) {
+                    await editUser(selectedUser.id, user);
 
-                    showToast(
-                      "Member updated successfully."
-                    );
+                    showToast("Member updated successfully.");
                   } else {
-                    await addUser(
-                      user
-                    );
+                    await addUser(user);
 
-                    showToast(
-                      "Member created successfully."
-                    );
+                    showToast("Member created successfully.");
                   }
 
                   closeUserModal();
                 } catch (error) {
-                  const message =
-                    error instanceof
-                      Error
-                      ? error.message
-                      : "Something went wrong.";
+                  const message = error instanceof Error ? error.message : "Something went wrong.";
 
-                  showToast(
-                    message,
-                    "error"
-                  );
+                  showToast(message, "error");
                 }
               }}
             />
           </Modal>
 
           <ConfirmModal
-            open={Boolean(
-              userToDelete
-            )}
+            open={Boolean(userToDelete)}
             title="Delete Member"
             message={`Are you sure you want to delete "${userToDelete?.name}"?`}
-            onCancel={() =>
-              setUserToDelete(
-                undefined
-              )
-            }
+            onCancel={() => setUserToDelete(undefined)}
             onConfirm={async () => {
               if (!userToDelete) {
                 return;
               }
 
               try {
-                await removeUser(
-                  userToDelete.id
-                );
+                await removeUser(userToDelete.id);
 
-                showToast(
-                  "Member deleted successfully."
-                );
+                showToast("Member deleted successfully.");
 
-                setUserToDelete(
-                  undefined
-                );
+                setUserToDelete(undefined);
               } catch (error) {
-                const message =
-                  error instanceof
-                    Error
-                    ? error.message
-                    : "Unable to delete member.";
+                const message = error instanceof Error ? error.message : "Unable to delete member.";
 
-                showToast(
-                  message,
-                  "error"
-                );
+                showToast(message, "error");
               }
             }}
           />
         </>
       )}
 
-      {toastMessage && (
-        <Toast
-          message={toastMessage}
-          type={toastType}
-        />
-      )}
+      {toastMessage && <Toast message={toastMessage} type={toastType} />}
     </div>
   );
 }

@@ -14,15 +14,10 @@ type UpdatePlanBody = {
   monthlyPrice?: unknown;
 };
 
-function parsePlanId(
-  id: string
-): number | null {
+function parsePlanId(id: string): number | null {
   const planId = Number(id);
 
-  if (
-    !Number.isInteger(planId) ||
-    planId <= 0
-  ) {
+  if (!Number.isInteger(planId) || planId <= 0) {
     return null;
   }
 
@@ -30,35 +25,25 @@ function parsePlanId(
 }
 
 function parsePrice(value: unknown): number | null {
-  if (
-    typeof value !== "number" ||
-    !Number.isFinite(value)
-  ) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
     return null;
   }
 
   return value;
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: PlanRouteContext
-) {
-  const authResult =
-    await requireManagerOrAdmin();
+export async function PATCH(request: Request, { params }: PlanRouteContext) {
+  const authResult = await requireManagerOrAdmin();
 
   if (authResult.response) {
     return authResult.response;
   }
 
-  const workspaceId =
-    authResult.session.user.workspaceId;
+  const workspaceId = authResult.session.user.workspaceId;
 
   try {
     const { id } = await params;
-
-    const planId =
-      parsePlanId(id);
+    const planId = parsePlanId(id);
 
     if (!planId) {
       return NextResponse.json(
@@ -71,17 +56,16 @@ export async function PATCH(
       );
     }
 
-    const existingPlan =
-      await prisma.plan.findFirst({
-        where: {
-          id: planId,
-          workspaceId,
-        },
+    const existingPlan = await prisma.plan.findFirst({
+      where: {
+        id: planId,
+        workspaceId,
+      },
 
-        select: {
-          id: true,
-        },
-      });
+      select: {
+        id: true,
+      },
+    });
 
     if (!existingPlan) {
       return NextResponse.json(
@@ -94,16 +78,10 @@ export async function PATCH(
       );
     }
 
-    const body =
-      (await request.json()) as UpdatePlanBody;
+    const body = (await request.json()) as UpdatePlanBody;
 
-    const name =
-      typeof body.name === "string"
-        ? body.name.trim()
-        : "";
-
-    const monthlyPrice =
-      parsePrice(body.monthlyPrice);
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    const monthlyPrice = parsePrice(body.monthlyPrice);
 
     if (!name) {
       return NextResponse.json(
@@ -116,14 +94,10 @@ export async function PATCH(
       );
     }
 
-    if (
-      monthlyPrice === null ||
-      monthlyPrice <= 0
-    ) {
+    if (name.length > 100) {
       return NextResponse.json(
         {
-          message:
-            "Monthly price must be greater than zero.",
+          message: "Plan name is too long.",
         },
         {
           status: 400,
@@ -131,31 +105,40 @@ export async function PATCH(
       );
     }
 
-    const duplicatePlan =
-      await prisma.plan.findFirst({
-        where: {
-          workspaceId,
+    if (monthlyPrice === null || monthlyPrice <= 0) {
+      return NextResponse.json(
+        {
+          message: "Monthly price must be greater than zero.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
-          id: {
-            not: planId,
-          },
+    const duplicatePlan = await prisma.plan.findFirst({
+      where: {
+        workspaceId,
 
-          name: {
-            equals: name,
-            mode: "insensitive",
-          },
+        id: {
+          not: planId,
         },
 
-        select: {
-          id: true,
+        name: {
+          equals: name,
+          mode: "insensitive",
         },
-      });
+      },
+
+      select: {
+        id: true,
+      },
+    });
 
     if (duplicatePlan) {
       return NextResponse.json(
         {
-          message:
-            "A plan with this name already exists.",
+          message: "A plan with this name already exists.",
         },
         {
           status: 409,
@@ -163,44 +146,37 @@ export async function PATCH(
       );
     }
 
-    const updatedPlan =
-      await prisma.plan.update({
-        where: {
-          id: planId,
-        },
+    const updatedPlan = await prisma.plan.update({
+      where: {
+        id: planId,
+      },
 
-        data: {
-          name,
-          monthlyPrice,
-        },
+      data: {
+        name,
+        monthlyPrice,
+      },
 
-        include: {
-          subscriptions: {
-            where: {
-              status: "Active",
-            },
+      include: {
+        subscriptions: {
+          where: {
+            status: "Active",
+          },
 
-            select: {
-              id: true,
-            },
+          select: {
+            id: true,
           },
         },
-      });
+      },
+    });
 
     return NextResponse.json({
       id: updatedPlan.id,
       name: updatedPlan.name,
-      monthlyPrice:
-        updatedPlan.monthlyPrice,
-
-      activeSubscriptions:
-        updatedPlan.subscriptions.length,
+      monthlyPrice: updatedPlan.monthlyPrice,
+      activeSubscriptions: updatedPlan.subscriptions.length,
     });
   } catch (error) {
-    console.error(
-      "PATCH /api/plans/[id] failed:",
-      error
-    );
+    console.error("PATCH /api/plans/[id] failed:", error);
 
     return NextResponse.json(
       {
@@ -213,25 +189,18 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: PlanRouteContext
-) {
-  const authResult =
-    await requireManagerOrAdmin();
+export async function DELETE(_request: Request, { params }: PlanRouteContext) {
+  const authResult = await requireManagerOrAdmin();
 
   if (authResult.response) {
     return authResult.response;
   }
 
-  const workspaceId =
-    authResult.session.user.workspaceId;
+  const workspaceId = authResult.session.user.workspaceId;
 
   try {
     const { id } = await params;
-
-    const planId =
-      parsePlanId(id);
+    const planId = parsePlanId(id);
 
     if (!planId) {
       return NextResponse.json(
@@ -244,17 +213,16 @@ export async function DELETE(
       );
     }
 
-    const existingPlan =
-      await prisma.plan.findFirst({
-        where: {
-          id: planId,
-          workspaceId,
-        },
+    const existingPlan = await prisma.plan.findFirst({
+      where: {
+        id: planId,
+        workspaceId,
+      },
 
-        select: {
-          id: true,
-        },
-      });
+      select: {
+        id: true,
+      },
+    });
 
     if (!existingPlan) {
       return NextResponse.json(
@@ -267,19 +235,17 @@ export async function DELETE(
       );
     }
 
-    const subscriptionCount =
-      await prisma.subscription.count({
-        where: {
-          workspaceId,
-          planId,
-        },
-      });
+    const subscriptionCount = await prisma.subscription.count({
+      where: {
+        workspaceId,
+        planId,
+      },
+    });
 
     if (subscriptionCount > 0) {
       return NextResponse.json(
         {
-          message:
-            "Plans with subscription history cannot be deleted.",
+          message: "Plans with subscription history cannot be deleted.",
         },
         {
           status: 409,
@@ -297,10 +263,7 @@ export async function DELETE(
       status: 204,
     });
   } catch (error) {
-    console.error(
-      "DELETE /api/plans/[id] failed:",
-      error
-    );
+    console.error("DELETE /api/plans/[id] failed:", error);
 
     return NextResponse.json(
       {

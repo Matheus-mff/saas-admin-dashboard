@@ -5,20 +5,11 @@ import { Subscription } from "@/types/subscription";
 import { getApiErrorMessage } from "@/utils/getApiErrorMessage";
 import { notifyDashboardDataChanged } from "@/utils/dashboardEvents";
 
-export async function getSubscriptions(): Promise<
-  Subscription[]
-> {
-  const response = await fetch(
-    "/api/subscriptions"
-  );
+export async function getSubscriptions(): Promise<Subscription[]> {
+  const response = await fetch("/api/subscriptions");
 
   if (!response.ok) {
-    throw new Error(
-      await getApiErrorMessage(
-        response,
-        "Unable to load subscriptions."
-      )
-    );
+    throw new Error(await getApiErrorMessage(response, "Unable to load subscriptions."));
   }
 
   return response.json();
@@ -28,32 +19,23 @@ export async function updateSubscriptionStatus(
   id: number,
   status: SubscriptionStatus
 ): Promise<Subscription> {
-  const response = await fetch(
-    `/api/subscriptions/${id}`,
-    {
-      method: "PATCH",
+  const response = await fetch(`/api/subscriptions/${id}`, {
+    method: "PATCH",
 
-      headers: {
-        "Content-Type": "application/json",
-      },
+    headers: {
+      "Content-Type": "application/json",
+    },
 
-      body: JSON.stringify({
-        status,
-      }),
-    }
-  );
+    body: JSON.stringify({
+      status,
+    }),
+  });
 
   if (!response.ok) {
-    throw new Error(
-      await getApiErrorMessage(
-        response,
-        "Unable to update subscription."
-      )
-    );
+    throw new Error(await getApiErrorMessage(response, "Unable to update subscription."));
   }
 
-  const updatedSubscription: Subscription =
-    await response.json();
+  const updatedSubscription: Subscription = await response.json();
 
   notifyDashboardDataChanged();
 

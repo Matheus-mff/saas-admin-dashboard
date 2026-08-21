@@ -1,13 +1,22 @@
+import SortableHeader from "@/components/ui/SortableHeader/SortableHeader";
+
 import { Customer } from "@/types/customer";
+import { CustomerSortField, SortDirection } from "@/types/sort";
 
 import { getSubscriptionStatusClass } from "@/utils/getSubscriptionStatusClass";
 
 type CustomerTableProps = {
   customers: Customer[];
+  sortField: CustomerSortField;
+  sortDirection: SortDirection;
+  onSort: (field: CustomerSortField) => void;
 };
 
 export default function CustomerTable({
   customers,
+  sortField,
+  sortDirection,
+  onSort,
 }: CustomerTableProps) {
   return (
     <div className="table-container">
@@ -15,91 +24,106 @@ export default function CustomerTable({
         <table className="w-full min-w-[900px] table-fixed">
           <thead className="table-header">
             <tr>
-              <th className="w-[28%] px-6 py-3 text-left">
-                Customer
-              </th>
+              <SortableHeader
+                label="Customer"
+                field="name"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                className="w-[28%]"
+              />
 
-              <th className="w-[22%] px-6 py-3 text-left">
-                Company
-              </th>
+              <SortableHeader
+                label="Company"
+                field="company"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                className="w-[22%]"
+              />
 
-              <th className="w-[18%] px-6 py-3 text-left">
-                Plan
-              </th>
+              <SortableHeader
+                label="Plan"
+                field="plan"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                className="w-[18%]"
+              />
 
-              <th className="w-[16%] px-6 py-3 text-center">
-                Status
-              </th>
+              <SortableHeader
+                label="Status"
+                field="status"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                align="center"
+                className="w-[16%]"
+              />
 
-              <th className="w-[16%] px-6 py-3 text-left">
-                Joined
-              </th>
+              <SortableHeader
+                label="Joined"
+                field="joined"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                className="w-[16%]"
+              />
             </tr>
           </thead>
 
           <tbody>
-            {customers.map(
-              (customer) => {
-                const subscription =
-                  customer.latestSubscription;
+            {customers.map((customer) => {
+              const subscription = customer.latestSubscription;
 
-                return (
-                  <tr
-                    key={customer.id}
-                    className="table-row"
-                  >
-                    <td className="px-6 py-4">
-                      <p className="font-medium">
-                        {customer.name}
-                      </p>
+              return (
+                <tr key={customer.id} className="table-row">
+                  <td className="px-6 py-3.5">
+                    <p className="truncate font-medium" title={customer.name}>
+                      {customer.name}
+                    </p>
 
-                      <p className="mt-1 truncate text-sm muted-text">
-                        {customer.email}
-                      </p>
-                    </td>
+                    <p className="mt-1 truncate text-sm muted-text" title={customer.email}>
+                      {customer.email}
+                    </p>
+                  </td>
 
-                    <td className="px-6 py-4">
-                      {customer.company ??
-                        "—"}
-                    </td>
+                  <td className="px-6 py-3.5">
+                    <p className="truncate" title={customer.company ?? undefined}>
+                      {customer.company ?? "—"}
+                    </p>
+                  </td>
 
-                    <td className="px-6 py-4">
-                      {subscription
-                        ?.plan.name ?? "—"}
-                    </td>
+                  <td className="px-6 py-3.5">
+                    <p className="truncate" title={subscription?.plan.name}>
+                      {subscription?.plan.name ?? "—"}
+                    </p>
+                  </td>
 
-                    <td className="px-6 py-4 text-center">
-                      {subscription ? (
-                        <span
-                          className={`status-badge ${getSubscriptionStatusClass(
-                            subscription.status
-                          )}`}
-                        >
-                          {
-                            subscription.status
-                          }
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
+                  <td className="px-6 py-3.5 text-center">
+                    {subscription ? (
+                      <span
+                        className={`status-badge ${getSubscriptionStatusClass(
+                          subscription.status
+                        )}`}
+                      >
+                        {subscription.status}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
 
-                    <td className="px-6 py-4">
-                      {new Date(
-                        customer.createdAt
-                      ).toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        }
-                      )}
-                    </td>
-                  </tr>
-                );
-              }
-            )}
+                  <td className="px-6 py-3.5">
+                    {new Date(customer.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

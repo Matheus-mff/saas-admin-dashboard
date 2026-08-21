@@ -1,8 +1,6 @@
 import { SubscriptionStatus } from "@/constants/subscriptionStatuses";
 
-export function getSubscriptionStatusClass(
-  status: SubscriptionStatus
-) {
+export function getSubscriptionStatusClass(status: SubscriptionStatus) {
   switch (status) {
     case "Active":
       return "status-active";

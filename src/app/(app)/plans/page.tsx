@@ -1,6 +1,10 @@
+// → controls whether we're creating or editing
+// → actually calls addPlan() / editPlan()
+
 "use client";
 
 import { useState } from "react";
+import { Plus } from "lucide-react";
 
 import PlanForm from "@/components/forms/PlanForm/PlanForm";
 import PlanTable from "@/components/plans/PlanTable/PlanTable";
@@ -20,46 +24,14 @@ import { useToast } from "@/hooks/useToast";
 import { Plan } from "@/types/plan";
 
 export default function PlansPage() {
-  const { canManageOperations } =
-    useCurrentUser();
+  const [selectedPlan, setSelectedPlan] = useState<Plan | undefined>();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [search, setSearch] =
-    useState("");
+  const { canManageOperations } = useCurrentUser();
 
-  const [
-    selectedPlan,
-    setSelectedPlan,
-  ] = useState<Plan | undefined>();
+  const { toastMessage, toastType, showToast } = useToast();
 
-  const [
-    isModalOpen,
-    setIsModalOpen,
-  ] = useState(false);
-
-  const {
-    toastMessage,
-    toastType,
-    showToast,
-  } = useToast();
-
-  const {
-    plans,
-    loading,
-    error,
-    retry,
-    addPlan,
-    editPlan,
-  } = usePlans();
-
-  const normalizedSearch =
-    search.trim().toLowerCase();
-
-  const filteredPlans =
-    plans.filter((plan) =>
-      plan.name
-        .toLowerCase()
-        .includes(normalizedSearch)
-    );
+  const { plans, loading, error, retry, addPlan, editPlan } = usePlans();
 
   function closeModal() {
     setSelectedPlan(undefined);
@@ -67,80 +39,49 @@ export default function PlansPage() {
   }
 
   if (loading) {
-    return <TableSkeleton />;
+    return (
+      <TableSkeleton columns={canManageOperations ? 4 : 3} showAction={canManageOperations} />
+    );
   }
 
   if (error) {
-    return (
-      <ErrorState
-        message={error}
-        onRetry={retry}
-      />
-    );
+    return <ErrorState message={error} onRetry={retry} />;
   }
 
   return (
     <div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">
-            Plans
-          </h1>
+          <h1 className="page-title">Plans</h1>
 
-          <p className="mt-2 muted-text">
-            Manage the subscription
-            plans available to your
-            customers.
+          <p className="page-description">
+            Manage the subscription plans available to your customers.
           </p>
         </div>
 
         {canManageOperations && (
           <Button
             onClick={() => {
-              setSelectedPlan(
-                undefined
-              );
+              setSelectedPlan(undefined);
 
               setIsModalOpen(true);
             }}
           >
-            Add Plan
+            <span className="inline-flex items-center gap-2">
+              <Plus size={15} strokeWidth={2} />
+              Add Plan
+            </span>
           </Button>
         )}
       </div>
 
-      {plans.length > 0 && (
-        <input
-          type="search"
-          placeholder="Search plans..."
-          value={search}
-          onChange={(event) =>
-            setSearch(
-              event.target.value
-            )
-          }
-          className="form-control mt-8"
-        />
-      )}
-
-      <div className="mt-6">
+      <div className="mt-7">
         {plans.length === 0 ? (
-          <EmptyState
-            title="No plans yet"
-            description="No subscription plans have been created."
-          />
-        ) : filteredPlans.length ===
-          0 ? (
-          <EmptyState
-            title="No plans found"
-            description="Try another search term."
-          />
+          <EmptyState title="No plans yet" description="No subscription plans have been created." />
         ) : (
           <PlanTable
-            plans={filteredPlans}
-            canManage={
-              canManageOperations
-            }
+            plans={plans}
+            canManage={canManageOperations}
             onEdit={(plan) => {
               setSelectedPlan(plan);
               setIsModalOpen(true);
@@ -152,43 +93,28 @@ export default function PlansPage() {
       {canManageOperations && (
         <Modal
           open={isModalOpen}
-          title={
-            selectedPlan
-              ? "Edit Plan"
-              : "Add Plan"
-          }
+          title={selectedPlan ? "Edit Plan" : "Add Plan"}
           onClose={closeModal}
         >
           <PlanForm
             plan={selectedPlan}
             onCancel={closeModal}
-            onSubmit={async (
-              plan
-            ) => {
+            onSubmit={async (plan) => {
               try {
                 if (selectedPlan) {
-                  await editPlan(
-                    selectedPlan.id,
-                    plan
-                  );
+                  await editPlan(selectedPlan.id, plan);
 
-                  showToast(
-                    "Plan updated successfully."
-                  );
+                  showToast("Plan updated successfully.");
                 } else {
                   await addPlan(plan);
 
-                  showToast(
-                    "Plan created successfully."
-                  );
+                  showToast("Plan created successfully.");
                 }
 
                 closeModal();
               } catch (error) {
                 showToast(
-                  error instanceof Error
-                    ? error.message
-                    : "Something went wrong.",
+                  error instanceof Error ? error.message : "Something went wrong.",
                   "error"
                 );
               }
@@ -197,12 +123,7 @@ export default function PlansPage() {
         </Modal>
       )}
 
-      {toastMessage && (
-        <Toast
-          message={toastMessage}
-          type={toastType}
-        />
-      )}
+      {toastMessage && <Toast message={toastMessage} type={toastType} />}
     </div>
   );
 }

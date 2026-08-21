@@ -7,9 +7,7 @@ type AppLayoutProps = {
   children: React.ReactNode;
 };
 
-export default async function AppLayout({
-  children,
-}: AppLayoutProps) {
+export default async function AppLayout({ children }: AppLayoutProps) {
   const session = await auth();
 
   if (!session?.user) {

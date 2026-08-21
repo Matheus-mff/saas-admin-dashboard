@@ -1,63 +1,36 @@
+/*
+→ displays inputs
+→ validates input
+→ sends valid form data back to page.tsx
+*/
+
 "use client";
 
-import {
-  FormEvent,
-  useState,
-} from "react";
+import { useState } from "react";
 
-import {
-  Plan,
-  PlanInput,
-} from "@/types/plan";
+import { Plan, PlanInput } from "@/types/plan";
 
 type PlanFormProps = {
   plan?: Plan;
-
-  onSubmit: (
-    plan: PlanInput
-  ) => void | Promise<void>;
-
+  onSubmit: (plan: PlanInput) => void | Promise<void>;
   onCancel: () => void;
 };
 
-export default function PlanForm({
-  plan,
-  onSubmit,
-  onCancel,
-}: PlanFormProps) {
-  const [name, setName] = useState(
-    plan?.name ?? ""
-  );
+export default function PlanForm({ plan, onSubmit, onCancel }: PlanFormProps) {
+  const [name, setName] = useState(plan?.name ?? "");
+  const [monthlyPrice, setMonthlyPrice] = useState(plan?.monthlyPrice.toString() ?? "");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [
-    monthlyPrice,
-    setMonthlyPrice,
-  ] = useState(
-    plan?.monthlyPrice.toString() ??
-    ""
-  );
+  const [errors, setErrors] = useState({
+    name: "",
+    monthlyPrice: "",
+  });
 
-  const [
-    isSubmitting,
-    setIsSubmitting,
-  ] = useState(false);
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+    e.preventDefault();
 
-  const [errors, setErrors] =
-    useState({
-      name: "",
-      monthlyPrice: "",
-    });
-
-  async function handleSubmit(
-    event: FormEvent
-  ) {
-    event.preventDefault();
-
-    const trimmedName =
-      name.trim();
-
-    const parsedPrice =
-      Number(monthlyPrice);
+    const trimmedName = name.trim();
+    const parsedPrice = Number(monthlyPrice);
 
     const nextErrors = {
       name: "",
@@ -65,23 +38,18 @@ export default function PlanForm({
     };
 
     if (!trimmedName) {
-      nextErrors.name =
-        "Plan name is required.";
+      nextErrors.name = "Plan name is required.";
+    } else if (trimmedName.length > 100) {
+      nextErrors.name = "Plan name is too long.";
     }
 
-    if (
-      !monthlyPrice ||
-      !Number.isFinite(parsedPrice) ||
-      parsedPrice <= 0
-    ) {
-      nextErrors.monthlyPrice =
-        "Enter a valid monthly price.";
+    if (!monthlyPrice || !Number.isFinite(parsedPrice)) {
+      nextErrors.monthlyPrice = "Enter a valid monthly price.";
+    } else if (parsedPrice <= 0) {
+      nextErrors.monthlyPrice = "Monthly price must be greater than zero.";
     }
 
-    if (
-      nextErrors.name ||
-      nextErrors.monthlyPrice
-    ) {
+    if (nextErrors.name || nextErrors.monthlyPrice) {
       setErrors(nextErrors);
 
       return;
@@ -100,12 +68,9 @@ export default function PlanForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} noValidate>
       <div className="mb-5">
-        <label
-          htmlFor="plan-name"
-          className="mb-1 block font-medium"
-        >
+        <label htmlFor="plan-name" className="mb-2 block text-sm font-semibold">
           Name
         </label>
 
@@ -113,39 +78,30 @@ export default function PlanForm({
           id="plan-name"
           type="text"
           value={name}
+          maxLength={100}
           disabled={isSubmitting}
-          onChange={(event) => {
-            setName(
-              event.target.value
-            );
+          onChange={(e) => {
+            setName(e.target.value);
 
             if (errors.name) {
-              setErrors(
-                (previousErrors) => ({
-                  ...previousErrors,
-                  name: "",
-                })
-              );
+              setErrors((prev) => ({
+                ...prev,
+                name: "",
+              }));
             }
           }}
-          className={`form-control ${errors.name
-              ? "form-control-error"
-              : ""
-            }`}
+          className={`form-control ${errors.name ? "form-control-error" : ""}`}
         />
 
         {errors.name && (
-          <p className="mt-1 text-sm text-red-500">
+          <p className="mt-1 text-sm text-[var(--danger)]" role="alert">
             {errors.name}
           </p>
         )}
       </div>
 
       <div className="mb-6">
-        <label
-          htmlFor="plan-price"
-          className="mb-1 block font-medium"
-        >
+        <label htmlFor="plan-price" className="mb-2 block text-sm font-semibold">
           Monthly price
         </label>
 
@@ -156,30 +112,21 @@ export default function PlanForm({
           step="0.01"
           value={monthlyPrice}
           disabled={isSubmitting}
-          onChange={(event) => {
-            setMonthlyPrice(
-              event.target.value
-            );
+          onChange={(e) => {
+            setMonthlyPrice(e.target.value);
 
-            if (
-              errors.monthlyPrice
-            ) {
-              setErrors(
-                (previousErrors) => ({
-                  ...previousErrors,
-                  monthlyPrice: "",
-                })
-              );
+            if (errors.monthlyPrice) {
+              setErrors((prev) => ({
+                ...prev,
+                monthlyPrice: "",
+              }));
             }
           }}
-          className={`form-control ${errors.monthlyPrice
-              ? "form-control-error"
-              : ""
-            }`}
+          className={`form-control ${errors.monthlyPrice ? "form-control-error" : ""}`}
         />
 
         {errors.monthlyPrice && (
-          <p className="mt-1 text-sm text-red-500">
+          <p className="mt-1 text-sm text-[var(--danger)]" role="alert">
             {errors.monthlyPrice}
           </p>
         )}
@@ -195,16 +142,8 @@ export default function PlanForm({
           Cancel
         </button>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="primary-button"
-        >
-          {isSubmitting
-            ? "Saving..."
-            : plan
-              ? "Save Changes"
-              : "Create Plan"}
+        <button type="submit" disabled={isSubmitting} className="primary-button">
+          {isSubmitting ? "Saving..." : plan ? "Save Changes" : "Create Plan"}
         </button>
       </div>
     </form>

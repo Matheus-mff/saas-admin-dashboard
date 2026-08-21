@@ -7,6 +7,7 @@ import TransactionTable from "@/components/transactions/TransactionTable/Transac
 import EmptyState from "@/components/ui/EmptyState/EmptyState";
 import ErrorState from "@/components/ui/ErrorState/ErrorState";
 import Pagination from "@/components/ui/Pagination/Pagination";
+import SearchInput from "@/components/ui/SearchInput/SearchInput";
 import TableSkeleton from "@/components/ui/Skeleton/TableSkeleton";
 
 import {
@@ -16,190 +17,161 @@ import {
 
 import { useTransactions } from "@/hooks/useTransactions";
 
+import { SortDirection, TransactionSortField } from "@/types/sort";
+import { Transaction } from "@/types/transaction";
+
+import { matchesSearch } from "@/utils/matchesSearch";
+
 const TRANSACTIONS_PER_PAGE = 10;
 
+function getTransactionSortValue(
+  transaction: Transaction,
+  field: TransactionSortField
+): string | number {
+  switch (field) {
+    case "id":
+      return transaction.id;
+    case "customer":
+      return transaction.subscription.customer.name;
+    case "plan":
+      return transaction.subscription.plan.name;
+    case "amount":
+      return transaction.amount;
+    case "status":
+      return transaction.status;
+    case "date":
+      return new Date(transaction.createdAt).getTime();
+  }
+}
+
 export default function TransactionsPage() {
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<TransactionStatusFilter>("All");
+  const [sortField, setSortField] = useState<TransactionSortField>("date");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
-  const [
-    currentPage,
-    setCurrentPage,
-  ] = useState(1);
+  const { transactions, loading, error, retry } = useTransactions();
 
-  const [
-    statusFilter,
-    setStatusFilter,
-  ] =
-    useState<TransactionStatusFilter>(
-      "All"
-    );
+  const filteredTransactions = transactions.filter((transaction) => {
+    const matchesSearchTerm = matchesSearch(search, [
+      transaction.id,
+      `#${transaction.id}`,
+      transaction.subscription.customer.name,
+      transaction.subscription.customer.email,
+      transaction.subscription.customer.company,
+      transaction.subscription.plan.name,
+    ]);
 
-  const {
-    transactions,
-    loading,
-    error,
-    retry,
-  } = useTransactions();
+    const matchesStatus = statusFilter === "All" || transaction.status === statusFilter;
 
-  const normalizedSearch =
-    search.trim().toLowerCase();
+    return matchesSearchTerm && matchesStatus;
+  });
 
-  const filteredTransactions =
-    transactions.filter(
-      (transaction) => {
-        const matchesSearch = [
-          transaction.id.toString(),
-          transaction.subscription
-            .customer.name,
-          transaction.subscription
-            .customer.email,
-          transaction.subscription
-            .customer.company ?? "",
-          transaction.subscription
-            .plan.name,
-        ].some((value) =>
-          value
-            .toLowerCase()
-            .includes(
-              normalizedSearch
-            )
-        );
+  const sortedTransactions = [...filteredTransactions].sort((a, b) => {
+    const valueA = getTransactionSortValue(a, sortField);
+    const valueB = getTransactionSortValue(b, sortField);
 
-        const matchesStatus =
-          statusFilter === "All" ||
-          transaction.status ===
-          statusFilter;
+    const comparison =
+      typeof valueA === "number" && typeof valueB === "number"
+        ? valueA - valueB
+        : String(valueA).localeCompare(String(valueB));
 
-        return (
-          matchesSearch &&
-          matchesStatus
-        );
-      }
-    );
+    return sortDirection === "asc" ? comparison : -comparison;
+  });
 
-  const totalPages = Math.ceil(
-    filteredTransactions.length /
-    TRANSACTIONS_PER_PAGE
+  const totalPages = Math.ceil(filteredTransactions.length / TRANSACTIONS_PER_PAGE);
+
+  const validCurrentPage = Math.min(currentPage, Math.max(totalPages, 1));
+
+  const startIndex = (validCurrentPage - 1) * TRANSACTIONS_PER_PAGE;
+
+  const paginatedTransactions = sortedTransactions.slice(
+    startIndex,
+    startIndex + TRANSACTIONS_PER_PAGE
   );
 
-  const validCurrentPage =
-    Math.min(
-      currentPage,
-      Math.max(totalPages, 1)
-    );
+  function handleSort(field: TransactionSortField) {
+    if (field === sortField) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      setCurrentPage(1);
 
-  const startIndex =
-    (validCurrentPage - 1) *
-    TRANSACTIONS_PER_PAGE;
+      return;
+    }
 
-  const paginatedTransactions =
-    filteredTransactions.slice(
-      startIndex,
-      startIndex +
-      TRANSACTIONS_PER_PAGE
-    );
+    setSortField(field);
+    setSortDirection("asc");
+    setCurrentPage(1);
+  }
 
   if (loading) {
-    return <TableSkeleton />;
+    return <TableSkeleton columns={6} showFilters filterCount={5} showSearch />;
   }
 
   if (error) {
-    return (
-      <ErrorState
-        message={error}
-        onRetry={retry}
-      />
-    );
+    return <ErrorState message={error} onRetry={retry} />;
   }
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">
-        Transactions
-      </h1>
+      <h1 className="page-title">Transactions</h1>
 
-      <p className="mt-2 muted-text">
-        Review subscription payments
-        and transaction statuses.
-      </p>
+      <p className="page-description">Review subscription payments and transaction statuses.</p>
 
       {transactions.length > 0 && (
-        <div className="mt-8 flex flex-col gap-4">
+        <div className="mt-7 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2">
-            {TRANSACTION_STATUS_FILTERS.map(
-              (status) => (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => {
-                    setStatusFilter(
-                      status
-                    );
+            {TRANSACTION_STATUS_FILTERS.map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => {
+                  setStatusFilter(status);
 
-                    setCurrentPage(1);
-                  }}
-                  className={
-                    statusFilter ===
-                      status
-                      ? "primary-button"
-                      : "secondary-button"
-                  }
-                >
-                  {status}
-                </button>
-              )
-            )}
+                  setCurrentPage(1);
+                }}
+                className={`filter-chip ${statusFilter === status ? "filter-chip-active" : ""}`}
+              >
+                {status}
+              </button>
+            ))}
           </div>
 
-          <input
-            type="search"
-            placeholder="Search by customer, plan, or transaction ID..."
-            value={search}
-            onChange={(event) => {
-              setSearch(
-                event.target.value
-              );
-
-              setCurrentPage(1);
-            }}
-            className="form-control"
-          />
+          <div className="w-full lg:max-w-md">
+            <SearchInput
+              placeholder="Search transactions..."
+              value={search}
+              onChange={(value) => {
+                setSearch(value);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
         </div>
       )}
 
-      <div className="mt-6">
-        {transactions.length ===
-          0 ? (
+      <div className="mt-5">
+        {transactions.length === 0 ? (
           <EmptyState
             title="No transactions yet"
             description="No transactions are available in this workspace."
           />
-        ) : filteredTransactions.length ===
-          0 ? (
-          <EmptyState
-            title="No transactions found"
-            description="Try another search or status."
-          />
+        ) : filteredTransactions.length === 0 ? (
+          <EmptyState title="No transactions found" description="Try another search or status." />
         ) : (
           <>
             <TransactionTable
-              transactions={
-                paginatedTransactions
-              }
+              transactions={paginatedTransactions}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              onSort={handleSort}
             />
 
             {totalPages > 1 && (
               <Pagination
-                currentPage={
-                  validCurrentPage
-                }
-                totalPages={
-                  totalPages
-                }
-                onPageChange={
-                  setCurrentPage
-                }
+                currentPage={validCurrentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
               />
             )}
           </>

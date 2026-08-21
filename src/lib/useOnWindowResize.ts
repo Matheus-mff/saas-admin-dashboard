@@ -1,7 +1,7 @@
-import * as React from "react";
+import { useEffect } from "react";
 
 export function useOnWindowResize(handler: () => void) {
-  React.useEffect(() => {
+  useEffect(() => {
     window.addEventListener("resize", handler);
 
     return () => {

@@ -1,35 +1,23 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
 import { getCustomers } from "@/services/customerService";
-
 import { Customer } from "@/types/customer";
 
 export function useCustomers() {
-  const [customers, setCustomers] =
-    useState<Customer[]>([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState("");
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   async function loadCustomers() {
     try {
       setLoading(true);
       setError("");
 
-      const data =
-        await getCustomers();
+      const data = await getCustomers();
 
       setCustomers(data);
     } catch {
-      setError(
-        "Unable to load customers."
-      );
+      setError("Unable to load customers.");
     } finally {
       setLoading(false);
     }
@@ -47,9 +35,7 @@ export function useCustomers() {
       .catch(() => {
         if (cancelled) return;
 
-        setError(
-          "Unable to load customers."
-        );
+        setError("Unable to load customers.");
       })
       .finally(() => {
         if (cancelled) return;

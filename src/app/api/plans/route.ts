@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 
-import {
-  requireAuthenticatedUser,
-  requireManagerOrAdmin,
-} from "@/lib/apiAuth";
-
+import { requireAuthenticatedUser, requireManagerOrAdmin } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 
 type CreatePlanBody = {
@@ -13,10 +9,7 @@ type CreatePlanBody = {
 };
 
 function parsePrice(value: unknown): number | null {
-  if (
-    typeof value !== "number" ||
-    !Number.isFinite(value)
-  ) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
     return null;
   }
 
@@ -24,54 +17,47 @@ function parsePrice(value: unknown): number | null {
 }
 
 export async function GET() {
-  const authResult =
-    await requireAuthenticatedUser();
+  const authResult = await requireAuthenticatedUser();
 
   if (authResult.response) {
     return authResult.response;
   }
 
-  const workspaceId =
-    authResult.session.user.workspaceId;
+  const workspaceId = authResult.session.user.workspaceId;
 
   try {
-    const plans =
-      await prisma.plan.findMany({
-        where: {
-          workspaceId,
-        },
+    const plans = await prisma.plan.findMany({
+      where: {
+        workspaceId,
+      },
 
-        include: {
-          subscriptions: {
-            where: {
-              status: "Active",
-            },
+      include: {
+        subscriptions: {
+          where: {
+            status: "Active",
+          },
 
-            select: {
-              id: true,
-            },
+          select: {
+            id: true,
           },
         },
+      },
 
-        orderBy: {
-          monthlyPrice: "asc",
-        },
-      });
+      orderBy: {
+        monthlyPrice: "asc",
+      },
+    });
 
     return NextResponse.json(
       plans.map((plan) => ({
         id: plan.id,
         name: plan.name,
         monthlyPrice: plan.monthlyPrice,
-        activeSubscriptions:
-          plan.subscriptions.length,
+        activeSubscriptions: plan.subscriptions.length,
       }))
     );
   } catch (error) {
-    console.error(
-      "GET /api/plans failed:",
-      error
-    );
+    console.error("GET /api/plans failed:", error);
 
     return NextResponse.json(
       {
@@ -84,30 +70,20 @@ export async function GET() {
   }
 }
 
-export async function POST(
-  request: Request
-) {
-  const authResult =
-    await requireManagerOrAdmin();
+export async function POST(request: Request) {
+  const authResult = await requireManagerOrAdmin();
 
   if (authResult.response) {
     return authResult.response;
   }
 
-  const workspaceId =
-    authResult.session.user.workspaceId;
+  const workspaceId = authResult.session.user.workspaceId;
 
   try {
-    const body =
-      (await request.json()) as CreatePlanBody;
+    const body = (await request.json()) as CreatePlanBody;
 
-    const name =
-      typeof body.name === "string"
-        ? body.name.trim()
-        : "";
-
-    const monthlyPrice =
-      parsePrice(body.monthlyPrice);
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    const monthlyPrice = parsePrice(body.monthlyPrice);
 
     if (!name) {
       return NextResponse.json(
@@ -120,14 +96,10 @@ export async function POST(
       );
     }
 
-    if (
-      monthlyPrice === null ||
-      monthlyPrice <= 0
-    ) {
+    if (name.length > 100) {
       return NextResponse.json(
         {
-          message:
-            "Monthly price must be greater than zero.",
+          message: "Plan name is too long.",
         },
         {
           status: 400,
@@ -135,27 +107,36 @@ export async function POST(
       );
     }
 
-    const existingPlan =
-      await prisma.plan.findFirst({
-        where: {
-          workspaceId,
-
-          name: {
-            equals: name,
-            mode: "insensitive",
-          },
+    if (monthlyPrice === null || monthlyPrice <= 0) {
+      return NextResponse.json(
+        {
+          message: "Monthly price must be greater than zero.",
         },
+        {
+          status: 400,
+        }
+      );
+    }
 
-        select: {
-          id: true,
+    const existingPlan = await prisma.plan.findFirst({
+      where: {
+        workspaceId,
+
+        name: {
+          equals: name,
+          mode: "insensitive",
         },
-      });
+      },
+
+      select: {
+        id: true,
+      },
+    });
 
     if (existingPlan) {
       return NextResponse.json(
         {
-          message:
-            "A plan with this name already exists.",
+          message: "A plan with this name already exists.",
         },
         {
           status: 409,
@@ -163,18 +144,19 @@ export async function POST(
       );
     }
 
-    const plan =
-      await prisma.plan.create({
-        data: {
-          name,
-          monthlyPrice,
-          workspaceId,
-        },
-      });
+    const plan = await prisma.plan.create({
+      data: {
+        name,
+        monthlyPrice,
+        workspaceId,
+      },
+    });
 
     return NextResponse.json(
       {
-        ...plan,
+        id: plan.id,
+        name: plan.name,
+        monthlyPrice: plan.monthlyPrice,
         activeSubscriptions: 0,
       },
       {
@@ -182,10 +164,7 @@ export async function POST(
       }
     );
   } catch (error) {
-    console.error(
-      "POST /api/plans failed:",
-      error
-    );
+    console.error("POST /api/plans failed:", error);
 
     return NextResponse.json(
       {

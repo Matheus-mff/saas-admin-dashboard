@@ -8,13 +8,10 @@ type SidebarItemProps = {
   href: string;
   label: string;
   icon: LucideIcon;
+  isCollapsed: boolean;
 };
 
-export default function SidebarItem({
-  href,
-  label,
-  icon: Icon,
-}: SidebarItemProps) {
+export default function SidebarItem({ href, label, icon: Icon, isCollapsed }: SidebarItemProps) {
   const pathname = usePathname();
 
   const isActive = pathname === href;
@@ -22,14 +19,20 @@ export default function SidebarItem({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 rounded-lg px-4 py-2 ${isActive
-          ? "bg-blue-600 text-white"
-          : "hover:bg-[var(--hover)]"
-        }`}
+      aria-current={isActive ? "page" : undefined}
+      aria-label={isCollapsed ? label : undefined}
+      title={isCollapsed ? label : undefined}
+      className={`flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
+        isCollapsed ? "md:justify-center md:px-2" : ""
+      } ${
+        isActive
+          ? "nav-item-active"
+          : "text-[var(--muted-strong)] hover:bg-[var(--hover)] hover:text-[var(--foreground)]"
+      }`}
     >
-      <Icon size={20} />
+      <Icon size={18} strokeWidth={1.8} className="shrink-0" />
 
-      <span>{label}</span>
+      <span className={`whitespace-nowrap ${isCollapsed ? "md:hidden" : ""}`}>{label}</span>
     </Link>
   );
 }

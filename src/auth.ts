@@ -1,21 +1,22 @@
 import { compare } from "bcryptjs"; // external library for working with hashed passwords
-import NextAuth from "next-auth"; // authentication library 
+import NextAuth from "next-auth"; // authentication library
 import Credentials from "next-auth/providers/credentials"; // the Credentials authentication provider from Auth.js
 import { z } from "zod"; // external validation library
+
+import { MAX_EMAIL_LENGTH } from "@/constants/emailRules";
 
 import { prisma } from "@/lib/prisma"; // It is used to communicate with the database
 
 const loginSchema = z.object({
-  email: z.email(),
+  email: z
+    .string()
+    .trim()
+    .max(MAX_EMAIL_LENGTH, `Email must contain at most ${MAX_EMAIL_LENGTH} characters.`)
+    .pipe(z.email()),
   password: z.string().min(1),
 });
 
-export const {
-  handlers,
-  auth,
-  signIn,
-  signOut,
-} = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
   // session, pages, providers and callbacks are the NextAuth config(handlers, auth, signIn, signOut)
   session: {
     strategy: "jwt",
@@ -40,46 +41,36 @@ export const {
       },
 
       async authorize(credentials) {
-        const parsedCredentials =
-          loginSchema.safeParse(credentials);
+        const parsedCredentials = loginSchema.safeParse(credentials);
 
         if (!parsedCredentials.success) {
           return null;
         }
 
-        const email =
-          parsedCredentials.data.email
-            .trim()
-            .toLowerCase();
+        const email = parsedCredentials.data.email.trim().toLowerCase();
 
-        const password =
-          parsedCredentials.data.password;
+        const password = parsedCredentials.data.password;
 
-        const user =
-          await prisma.user.findUnique({
-            where: {
-              email,
-            },
+        const user = await prisma.user.findUnique({
+          where: {
+            email,
+          },
 
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              role: true,
-              passwordHash: true,
-              workspaceId: true,
-            },
-          });
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            passwordHash: true,
+            workspaceId: true,
+          },
+        });
 
         if (!user?.passwordHash) {
           return null;
         }
 
-        const passwordMatches =
-          await compare(
-            password,
-            user.passwordHash
-          );
+        const passwordMatches = await compare(password, user.passwordHash);
 
         if (!passwordMatches) {
           return null;
@@ -101,8 +92,7 @@ export const {
       if (user) {
         token.id = user.id;
         token.role = user.role;
-        token.workspaceId =
-          user.workspaceId;
+        token.workspaceId = user.workspaceId;
       }
 
       return token;
@@ -115,46 +105,37 @@ export const {
 
       const userId = Number(token.id);
 
-      if (
-        !Number.isInteger(userId) ||
-        userId <= 0
-      ) {
+      if (!Number.isInteger(userId) || userId <= 0) {
         return session;
       }
 
-      const currentUser =
-        await prisma.user.findUnique({
-          where: {
-            id: userId,
-          },
+      const currentUser = await prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
 
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            workspaceId: true,
-          },
-        });
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          workspaceId: true,
+        },
+      });
 
       if (!currentUser) {
         return session;
       }
 
-      session.user.id =
-        currentUser.id.toString();
+      session.user.id = currentUser.id.toString();
 
-      session.user.name =
-        currentUser.name;
+      session.user.name = currentUser.name;
 
-      session.user.email =
-        currentUser.email;
+      session.user.email = currentUser.email;
 
-      session.user.role =
-        currentUser.role;
+      session.user.role = currentUser.role;
 
-      session.user.workspaceId =
-        currentUser.workspaceId;
+      session.user.workspaceId = currentUser.workspaceId;
 
       return session;
     },

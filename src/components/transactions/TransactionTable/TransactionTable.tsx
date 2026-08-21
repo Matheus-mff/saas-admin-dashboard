@@ -1,13 +1,22 @@
+import SortableHeader from "@/components/ui/SortableHeader/SortableHeader";
+
+import { SortDirection, TransactionSortField } from "@/types/sort";
 import { Transaction } from "@/types/transaction";
 
 import { getTransactionStatusClass } from "@/utils/getTransactionStatusClass";
 
 type TransactionTableProps = {
   transactions: Transaction[];
+  sortField: TransactionSortField;
+  sortDirection: SortDirection;
+  onSort: (field: TransactionSortField) => void;
 };
 
 export default function TransactionTable({
   transactions,
+  sortField,
+  sortDirection,
+  onSort,
 }: TransactionTableProps) {
   return (
     <div className="table-container">
@@ -15,108 +24,114 @@ export default function TransactionTable({
         <table className="w-full min-w-[950px] table-fixed">
           <thead className="table-header">
             <tr>
-              <th className="w-[13%] px-6 py-3 text-left">
-                Transaction
-              </th>
+              <SortableHeader
+                label="Transaction ID"
+                field="id"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                className="w-[13%]"
+              />
 
-              <th className="w-[25%] px-6 py-3 text-left">
-                Customer
-              </th>
+              <SortableHeader
+                label="Customer"
+                field="customer"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                className="w-[25%]"
+              />
 
-              <th className="w-[17%] px-6 py-3 text-left">
-                Plan
-              </th>
+              <SortableHeader
+                label="Plan"
+                field="plan"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                className="w-[17%]"
+              />
 
-              <th className="w-[15%] px-6 py-3 text-right">
-                Amount
-              </th>
+              <SortableHeader
+                label="Amount"
+                field="amount"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                align="right"
+                className="w-[15%]"
+              />
 
-              <th className="w-[15%] px-6 py-3 text-center">
-                Status
-              </th>
+              <SortableHeader
+                label="Status"
+                field="status"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                align="center"
+                className="w-[15%]"
+              />
 
-              <th className="w-[15%] px-6 py-3 text-left">
-                Date
-              </th>
+              <SortableHeader
+                label="Date"
+                field="date"
+                activeField={sortField}
+                direction={sortDirection}
+                onSort={onSort}
+                className="w-[15%]"
+              />
             </tr>
           </thead>
 
           <tbody>
-            {transactions.map(
-              (transaction) => (
-                <tr
-                  key={transaction.id}
-                  className="table-row"
-                >
-                  <td className="px-6 py-4 font-medium">
-                    #{transaction.id}
-                  </td>
+            {transactions.map((transaction) => (
+              <tr key={transaction.id} className="table-row">
+                <td className="px-6 py-3.5 font-medium">#{transaction.id}</td>
 
-                  <td className="px-6 py-4">
-                    <p className="font-medium">
-                      {
-                        transaction
-                          .subscription
-                          .customer.name
-                      }
-                    </p>
+                <td className="px-6 py-3.5">
+                  <p
+                    className="truncate font-medium"
+                    title={transaction.subscription.customer.name}
+                  >
+                    {transaction.subscription.customer.name}
+                  </p>
 
-                    <p className="mt-1 text-sm muted-text">
-                      {transaction
-                        .subscription
-                        .customer
-                        .company ?? "—"}
-                    </p>
-                  </td>
+                  <p
+                    className="mt-1 truncate text-sm muted-text"
+                    title={transaction.subscription.customer.company ?? undefined}
+                  >
+                    {transaction.subscription.customer.company ?? "—"}
+                  </p>
+                </td>
 
-                  <td className="px-6 py-4">
-                    {
-                      transaction
-                        .subscription
-                        .plan.name
-                    }
-                  </td>
+                <td className="px-6 py-3.5">
+                  <p className="truncate" title={transaction.subscription.plan.name}>
+                    {transaction.subscription.plan.name}
+                  </p>
+                </td>
 
-                  <td className="px-6 py-4 text-right font-medium tabular-nums">
-                    $
-                    {transaction.amount.toLocaleString(
-                      "en-US",
-                      {
-                        minimumFractionDigits:
-                          2,
-                        maximumFractionDigits:
-                          2,
-                      }
-                    )}
-                  </td>
+                <td className="px-6 py-3.5 text-right font-medium tabular-nums">
+                  $
+                  {transaction.amount.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </td>
 
-                  <td className="px-6 py-4 text-center">
-                    <span
-                      className={`status-badge ${getTransactionStatusClass(
-                        transaction.status
-                      )}`}
-                    >
-                      {
-                        transaction.status
-                      }
-                    </span>
-                  </td>
+                <td className="px-6 py-3.5 text-center">
+                  <span className={`status-badge ${getTransactionStatusClass(transaction.status)}`}>
+                    {transaction.status}
+                  </span>
+                </td>
 
-                  <td className="px-6 py-4">
-                    {new Date(
-                      transaction.createdAt
-                    ).toLocaleDateString(
-                      "en-US",
-                      {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      }
-                    )}
-                  </td>
-                </tr>
-              )
-            )}
+                <td className="px-6 py-3.5">
+                  {new Date(transaction.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

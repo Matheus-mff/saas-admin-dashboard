@@ -3,14 +3,12 @@ import { getApiErrorMessage } from "@/utils/getApiErrorMessage";
 export type RegisterInput = {
   name: string;
   email: string;
-  company: string;
+  workspaceName: string;
   password: string;
   confirmPassword: string;
 };
 
-export async function registerAccount(
-  account: RegisterInput
-): Promise<void> {
+export async function registerAccount(account: RegisterInput): Promise<void> {
   const response = await fetch("/api/register", {
     method: "POST",
 
@@ -22,11 +20,6 @@ export async function registerAccount(
   });
 
   if (!response.ok) {
-    throw new Error(
-      await getApiErrorMessage(
-        response,
-        "Unable to create account."
-      )
-    );
+    throw new Error(await getApiErrorMessage(response, "Unable to create account."));
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useEffect } from "react";
+import { X } from "lucide-react";
 
 type ModalProps = {
   open: boolean;
@@ -9,12 +10,7 @@ type ModalProps = {
   onClose: () => void;
 };
 
-export default function Modal({
-  open,
-  title,
-  children,
-  onClose,
-}: ModalProps) {
+export default function Modal({ open, title, children, onClose }: ModalProps) {
   useEffect(() => {
     if (!open) return;
 
@@ -34,32 +30,21 @@ export default function Modal({
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
+    <div className="modal-overlay z-[70] flex items-center justify-center p-4" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className="modal-panel w-full max-w-md rounded-xl p-6 shadow-xl"
+        className="modal-panel w-full max-w-md rounded-[14px] p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2
-            id="modal-title"
-            className="text-xl font-semibold"
-          >
+        <div className="mb-5 flex items-center justify-between">
+          <h2 id="modal-title" className="text-lg font-semibold tracking-[-0.02em]">
             {title}
           </h2>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="icon-button muted-text"
-            aria-label="Close modal"
-          >
-            ✕
+          <button type="button" onClick={onClose} className="icon-button" aria-label="Close modal">
+            <X size={18} strokeWidth={1.8} />
           </button>
         </div>
 

@@ -8,17 +8,10 @@ type NotificationResponse = {
 };
 
 export async function getNotifications(): Promise<NotificationResponse> {
-  const response = await fetch(
-    "/api/notifications"
-  );
+  const response = await fetch("/api/notifications");
 
   if (!response.ok) {
-    throw new Error(
-      await getApiErrorMessage(
-        response,
-        "Unable to load notifications."
-      )
-    );
+    throw new Error(await getApiErrorMessage(response, "Unable to load notifications."));
   }
 
   return response.json();

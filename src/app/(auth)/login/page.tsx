@@ -12,7 +12,7 @@ export default async function LoginPage() {
   }
 
   return (
-    <main className="app-surface flex min-h-screen items-center justify-center p-6">
+    <main className="auth-shell flex min-h-screen items-center justify-center p-5 sm:p-8">
       <LoginForm />
     </main>
   );

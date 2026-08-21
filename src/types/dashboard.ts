@@ -2,7 +2,10 @@ import { Transaction } from "@/types/transaction";
 
 export type DashboardStats = {
   totalCustomers: number;
+  newCustomersThisMonth: number;
   activeSubscriptions: number;
+  activeCustomers: number;
+  paidTransactions: number;
   mrr: number;
   totalRevenue: number;
 };

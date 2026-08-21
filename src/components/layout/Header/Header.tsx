@@ -1,7 +1,7 @@
-import {
-  LogOut,
-  Menu,
-} from "lucide-react";
+"use client";
+
+import { LogOut, PanelLeftOpen } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 import { logout } from "@/app/(app)/actions";
 
@@ -20,13 +20,20 @@ type HeaderProps = {
   };
 };
 
-const roleLabels: Record<
-  UserRole,
-  string
-> = {
+const roleLabels: Record<UserRole, string> = {
   Admin: "Administrator",
   Manager: "Manager",
   User: "User",
+};
+
+const pageLabels: Record<string, string> = {
+  "/dashboard": "Overview",
+  "/users": "Team",
+  "/customers": "Customers",
+  "/plans": "Plans",
+  "/subscriptions": "Subscriptions",
+  "/transactions": "Transactions",
+  "/settings": "Settings",
 };
 
 function getInitials(name: string) {
@@ -37,31 +44,21 @@ function getInitials(name: string) {
   }
 
   if (nameParts.length === 1) {
-    return nameParts[0]
-      .charAt(0)
-      .toUpperCase();
+    return nameParts[0].charAt(0).toUpperCase();
   }
 
-  return (
-    nameParts[0].charAt(0) +
-    nameParts[
-      nameParts.length - 1
-    ].charAt(0)
-  ).toUpperCase();
+  return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
 }
 
-export default function Header({
-  onMenuClick,
-  user,
-}: HeaderProps) {
-  const initials = getInitials(
-    user.name
-  );
+export default function Header({ onMenuClick, user }: HeaderProps) {
+  const pathname = usePathname();
+  const initials = getInitials(user.name);
 
   const roleLabel = roleLabels[user.role];
+  const pageLabel = pageLabels[pathname] ?? "Overview";
 
   return (
-    <header className="navigation-surface flex h-16 items-center justify-between border-b px-4 sm:px-6 lg:px-8">
+    <header className="navigation-surface sticky top-0 z-30 flex h-[60px] items-center justify-between border-b px-5 sm:px-7 lg:px-9 xl:px-10">
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -69,42 +66,38 @@ export default function Header({
           className="icon-button md:hidden"
           aria-label="Open navigation"
         >
-          <Menu size={22} />
+          <PanelLeftOpen size={19} strokeWidth={1.8} />
         </button>
 
-        <p className="text-sm muted-text">
-          Admin Dashboard
-        </p>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="font-medium">Workspace</span>
+          <span className="muted-text">/</span>
+          <span className="muted-text">{pageLabel}</span>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-4">
+      <div className="flex items-center gap-1.5 sm:gap-3">
         <ThemeToggle />
 
         <NotificationBell />
 
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 font-semibold text-white">
+        <div className="mx-1 hidden h-6 w-px bg-[var(--border)] sm:block" />
+
+        <div className="flex items-center gap-2.5">
+          <div className="user-avatar">
             {initials}
           </div>
 
           <div className="hidden sm:block">
-            <p className="max-w-40 truncate text-sm font-medium">
-              {user.name}
-            </p>
+            <p className="max-w-40 truncate text-sm font-semibold leading-tight">{user.name}</p>
 
-            <p className="text-xs muted-text">
-              {roleLabel}
-            </p>
+            <p className="mt-0.5 text-[11px] muted-text">{roleLabel}</p>
           </div>
         </div>
 
         <form action={logout}>
-          <button
-            type="submit"
-            className="icon-button"
-            aria-label="Logout"
-          >
-            <LogOut size={20} />
+          <button type="submit" className="icon-button" aria-label="Logout" title="Logout">
+            <LogOut size={18} strokeWidth={1.8} />
           </button>
         </form>
       </div>
