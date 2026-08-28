@@ -1,7 +1,4 @@
-export function matchesSearch(
-  search: string,
-  values: Array<string | number | null | undefined>
-) {
+export function matchesSearch(search: string, values: Array<string | number | null | undefined>) {
   const normalizedSearch = search.trim().toLowerCase();
 
   if (!normalizedSearch) {

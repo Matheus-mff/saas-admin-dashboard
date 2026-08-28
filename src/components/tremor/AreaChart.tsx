@@ -28,7 +28,7 @@ import {
   hasOnlyOneValueForKey,
   type AvailableChartColorsKeys,
 } from "@/lib/chartUtils";
-import { useOnWindowResize } from "@/lib/useOnWindowResize";
+import { useOnWindowResize } from "@/hooks/useOnWindowResize";
 import { cx } from "@/lib/utils";
 
 //#region Legend
@@ -47,9 +47,7 @@ const LegendItem = ({ name, color, onClick, activeLegend }: LegendItemProps) => 
       className={cx(
         // base
         "group inline-flex flex-nowrap items-center gap-1.5 rounded-sm px-2 py-1 whitespace-nowrap transition",
-        hasOnValueChange
-          ? "cursor-pointer hover:bg-[var(--hover)]"
-          : "cursor-default"
+        hasOnValueChange ? "cursor-pointer hover:bg-[var(--hover)]" : "cursor-default"
       )}
       onClick={(e) => {
         e.stopPropagation();

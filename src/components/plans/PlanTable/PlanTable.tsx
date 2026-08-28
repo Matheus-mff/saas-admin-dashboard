@@ -1,5 +1,3 @@
-// → chooses WHICH existing plan to edit
-
 import { Pencil } from "lucide-react";
 
 import { Plan } from "@/types/plan";

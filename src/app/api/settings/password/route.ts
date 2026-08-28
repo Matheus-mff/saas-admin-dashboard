@@ -108,7 +108,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // Keep the published demo credentials stable for portfolio reviewers.
+    // Keep the published demo credentials stable for portfolio reviewers
     if (PROTECTED_DEMO_EMAILS.includes(user.email)) {
       return NextResponse.json(
         {

@@ -15,7 +15,6 @@ type AuthFailure = {
 
 type AuthResult = AuthSuccess | AuthFailure;
 
-// if the user isn't logged in = error object, if it is logged in === responde: null
 export async function requireAuthenticatedUser(): Promise<AuthResult> {
   const session = await auth();
 

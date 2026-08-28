@@ -279,11 +279,11 @@ export async function GET() {
     /*
       Subscription Growth represents the size
       of the subscription base at the end of
-      each month.
+      each month
 
       A subscription counts if it had started
       before the following month and had not
-      already been canceled.
+      already been canceled
     */
     const subscriptionGrowth = months.map((month) => {
       const monthEnd = getFollowingMonthStart(month);

@@ -32,7 +32,6 @@ export function CurrentUserProvider({ children, user }: CurrentUserProviderProps
   const canManageOperations = isAdmin || isManager;
 
   return (
-    // Every component inside these Provider tags is allowed to access this value
     <CurrentUserContext.Provider
       value={{
         user,

@@ -1,11 +1,6 @@
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-/*
-Zod = the library
-z = the object used to build schemas / similar to TypeScript, but it works while the application is running
-schema = a set of validation rules
-*/
 
 import { MAX_EMAIL_LENGTH } from "@/constants/emailRules";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@/constants/passwordRules";

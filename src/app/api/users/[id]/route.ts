@@ -99,7 +99,7 @@ export async function PATCH(request: Request, { params }: UserRouteContext) {
     }
 
     // Keep the public demo accounts unchanged so portfolio reviewers can always
-    // use the published credentials to test every permission level.
+    // use the published credentials to test every permission level
     if (PROTECTED_DEMO_EMAILS.includes(existingUser.email)) {
       return NextResponse.json(
         {
@@ -289,7 +289,7 @@ export async function DELETE(_request: Request, { params }: UserRouteContext) {
     }
 
     // Keep the public demo accounts available so portfolio reviewers can always
-    // test the Admin, Manager, and User permission levels.
+    // test the Admin, Manager, and User permission levels
     if (PROTECTED_DEMO_EMAILS.includes(existingUser.email)) {
       return NextResponse.json(
         {

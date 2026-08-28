@@ -8,24 +8,6 @@ import { login } from "@/app/(auth)/login/actions";
 
 import { MAX_EMAIL_LENGTH } from "@/constants/emailRules";
 
-/* 
-INPUT:
-[1] login
-→ action React should run
-
-[2] undefined
-→ initial action state
-
-OUTPUT:
-[1] errorMessage
-→ current result/state returned by login
-
-[2] formAction
-→ function used to trigger login
-
-[3] isPending
-→ whether login is currently running
-*/
 export default function LoginForm() {
   const [errorMessage, formAction, isPending] = useActionState(login, undefined);
 
@@ -125,7 +107,10 @@ export default function LoginForm() {
 
       <p className="mt-7 text-center text-sm muted-text">
         Want your own workspace?{" "}
-        <Link href="/register" className="font-semibold text-[var(--foreground)] underline underline-offset-4">
+        <Link
+          href="/register"
+          className="font-semibold text-[var(--foreground)] underline underline-offset-4"
+        >
           Create an account
         </Link>
       </p>

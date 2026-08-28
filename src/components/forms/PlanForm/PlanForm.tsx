@@ -1,9 +1,3 @@
-/*
-→ displays inputs
-→ validates input
-→ sends valid form data back to page.tsx
-*/
-
 "use client";
 
 import { useState } from "react";

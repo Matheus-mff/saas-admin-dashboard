@@ -214,8 +214,8 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // Demo reviewers must not be able to change the published demo credentials.
-    // Admins can still update the workspace name as long as their own profile stays unchanged.
+    // Demo reviewers must not be able to change the published demo credentials
+    // Admins can still update the workspace name as long as their own profile stays unchanged
     if (
       PROTECTED_DEMO_EMAILS.includes(existingUser.email) &&
       (name !== existingUser.name || email !== existingUser.email)

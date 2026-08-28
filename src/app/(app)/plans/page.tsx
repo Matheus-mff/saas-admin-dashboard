@@ -1,6 +1,3 @@
-// → controls whether we're creating or editing
-// → actually calls addPlan() / editPlan()
-
 "use client";
 
 import { useState } from "react";
@@ -39,9 +36,7 @@ export default function PlansPage() {
   }
 
   if (loading) {
-    return (
-      <TableSkeleton columns={canManageOperations ? 4 : 3} showAction={canManageOperations} />
-    );
+    return <TableSkeleton columns={canManageOperations ? 4 : 3} showAction={canManageOperations} />;
   }
 
   if (error) {
