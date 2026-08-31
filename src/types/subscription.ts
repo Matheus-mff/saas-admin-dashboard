@@ -19,3 +19,11 @@ export type Subscription = {
     monthlyPrice: number;
   };
 };
+
+export type CreatableSubscriptionStatus = Exclude<SubscriptionStatus, "Canceled">;
+
+export type SubscriptionInput = {
+  customerId: number;
+  planId: number;
+  status: CreatableSubscriptionStatus;
+};

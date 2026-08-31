@@ -20,3 +20,9 @@ export type Customer = {
   createdAt: string;
   latestSubscription: CustomerSubscription | null;
 };
+
+export type CustomerInput = {
+  name: string;
+  email: string;
+  company: string;
+};

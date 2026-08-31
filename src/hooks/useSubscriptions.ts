@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
 
 import { SubscriptionStatus } from "@/constants/subscriptionStatuses";
-import { getSubscriptions, updateSubscriptionStatus } from "@/services/subscriptionService";
-import { Subscription } from "@/types/subscription";
+
+import {
+  createSubscription,
+  getSubscriptions,
+  updateSubscriptionStatus,
+} from "@/services/subscriptionService";
+
+import { Subscription, SubscriptionInput } from "@/types/subscription";
 
 export function useSubscriptions() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -24,11 +30,19 @@ export function useSubscriptions() {
     }
   }
 
+  async function addSubscription(subscription: SubscriptionInput) {
+    const newSubscription = await createSubscription(subscription);
+
+    setSubscriptions((prev) => [newSubscription, ...prev]);
+  }
+
   async function changeSubscriptionStatus(id: number, status: SubscriptionStatus) {
     const updatedSubscription = await updateSubscriptionStatus(id, status);
 
     setSubscriptions((prev) =>
-      prev.map((subscription) => (subscription.id === id ? updatedSubscription : subscription))
+      prev.map((subscription) =>
+        subscription.id === id ? updatedSubscription : subscription
+      )
     );
   }
 
@@ -48,7 +62,6 @@ export function useSubscriptions() {
       })
       .finally(() => {
         if (cancelled) return;
-
         setLoading(false);
       });
 
@@ -62,6 +75,7 @@ export function useSubscriptions() {
     loading,
     error,
     retry: loadSubscriptions,
+    addSubscription,
     changeSubscriptionStatus,
   };
 }

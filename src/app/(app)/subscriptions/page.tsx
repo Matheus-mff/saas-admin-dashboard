@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { Plus } from "lucide-react";
 
+import SubscriptionForm from "@/components/forms/SubscriptionForm/SubscriptionForm";
 import SubscriptionTable from "@/components/subscriptions/SubscriptionTable/SubscriptionTable";
-
+import Button from "@/components/ui/Button/Button";
 import EmptyState from "@/components/ui/EmptyState/EmptyState";
 import ErrorState from "@/components/ui/ErrorState/ErrorState";
+import Modal from "@/components/ui/Modal/Modal";
 import Pagination from "@/components/ui/Pagination/Pagination";
 import SearchInput from "@/components/ui/SearchInput/SearchInput";
 import TableSkeleton from "@/components/ui/Skeleton/TableSkeleton";
@@ -15,7 +18,6 @@ import {
   SUBSCRIPTION_STATUS_FILTERS,
   SubscriptionStatusFilter,
 } from "@/constants/subscriptionStatuses";
-
 import { useCurrentUser } from "@/contexts/CurrentUserContext";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { useToast } from "@/hooks/useToast";
@@ -51,11 +53,17 @@ export default function SubscriptionsPage() {
   const [statusFilter, setStatusFilter] = useState<SubscriptionStatusFilter>("All");
   const [sortField, setSortField] = useState<SubscriptionSortField>("started");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { canManageOperations } = useCurrentUser();
-
-  const { subscriptions, loading, error, retry, changeSubscriptionStatus } = useSubscriptions();
-
+  const {
+    subscriptions,
+    loading,
+    error,
+    retry,
+    addSubscription,
+    changeSubscriptionStatus,
+  } = useSubscriptions();
   const { toastMessage, toastType, showToast } = useToast();
 
   const filteredSubscriptions = subscriptions.filter((subscription) => {
@@ -84,11 +92,8 @@ export default function SubscriptionsPage() {
   });
 
   const totalPages = Math.ceil(filteredSubscriptions.length / SUBSCRIPTIONS_PER_PAGE);
-
   const validCurrentPage = Math.min(currentPage, Math.max(totalPages, 1));
-
   const startIndex = (validCurrentPage - 1) * SUBSCRIPTIONS_PER_PAGE;
-
   const paginatedSubscriptions = sortedSubscriptions.slice(
     startIndex,
     startIndex + SUBSCRIPTIONS_PER_PAGE
@@ -96,9 +101,8 @@ export default function SubscriptionsPage() {
 
   function handleSort(field: SubscriptionSortField) {
     if (field === sortField) {
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      setSortDirection((previous) => (previous === "asc" ? "desc" : "asc"));
       setCurrentPage(1);
-
       return;
     }
 
@@ -108,7 +112,14 @@ export default function SubscriptionsPage() {
   }
 
   if (loading) {
-    return <TableSkeleton columns={5} showFilters showSearch />;
+    return (
+      <TableSkeleton
+        columns={5}
+        showFilters
+        showSearch
+        showAction={canManageOperations}
+      />
+    );
   }
 
   if (error) {
@@ -117,9 +128,25 @@ export default function SubscriptionsPage() {
 
   return (
     <div>
-      <h1 className="page-title">Subscriptions</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="page-title">Subscriptions</h1>
+          <p className="page-description">
+            {canManageOperations
+              ? "Create and manage customer subscriptions, plans, and statuses."
+              : "View customer subscriptions, plans, and current statuses."}
+          </p>
+        </div>
 
-      <p className="page-description">View customer subscriptions, plans, and current statuses.</p>
+        {canManageOperations && (
+          <Button onClick={() => setIsModalOpen(true)}>
+            <span className="inline-flex items-center gap-2">
+              <Plus size={15} strokeWidth={2} />
+              Add Subscription
+            </span>
+          </Button>
+        )}
+      </div>
 
       {subscriptions.length > 0 && (
         <div className="mt-7 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -130,7 +157,6 @@ export default function SubscriptionsPage() {
                 type="button"
                 onClick={() => {
                   setStatusFilter(status);
-
                   setCurrentPage(1);
                 }}
                 className={`filter-chip ${statusFilter === status ? "filter-chip-active" : ""}`}
@@ -157,7 +183,11 @@ export default function SubscriptionsPage() {
         {subscriptions.length === 0 ? (
           <EmptyState
             title="No subscriptions yet"
-            description="No subscriptions are available in this workspace."
+            description={
+              canManageOperations
+                ? "Create a subscription for an eligible customer to start tracking recurring revenue."
+                : "No subscriptions are available in this workspace."
+            }
           />
         ) : filteredSubscriptions.length === 0 ? (
           <EmptyState title="No subscriptions found" description="Try another search or status." />
@@ -172,7 +202,6 @@ export default function SubscriptionsPage() {
               onStatusChange={async (id, status) => {
                 try {
                   await changeSubscriptionStatus(id, status);
-
                   showToast("Subscription updated successfully.");
                 } catch (error) {
                   showToast(
@@ -193,6 +222,29 @@ export default function SubscriptionsPage() {
           </>
         )}
       </div>
+
+      {canManageOperations && (
+        <Modal open={isModalOpen} title="Add Subscription" onClose={() => setIsModalOpen(false)}>
+          <SubscriptionForm
+            onCancel={() => setIsModalOpen(false)}
+            onSubmit={async (subscription) => {
+              try {
+                await addSubscription(subscription);
+                setSearch("");
+                setStatusFilter("All");
+                setCurrentPage(1);
+                setIsModalOpen(false);
+                showToast("Subscription created successfully.");
+              } catch (error) {
+                showToast(
+                  error instanceof Error ? error.message : "Unable to create subscription.",
+                  "error"
+                );
+              }
+            }}
+          />
+        </Modal>
+      )}
 
       {toastMessage && <Toast message={toastMessage} type={toastType} />}
     </div>

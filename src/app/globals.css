@@ -264,10 +264,6 @@ textarea {
   background: var(--input-background);
   color: var(--foreground);
   padding: 0.625rem 0.75rem;
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease,
-    background 150ms ease;
 }
 
 .form-control::placeholder {
@@ -331,11 +327,6 @@ textarea {
   font-size: 0.875rem;
   font-weight: 600;
   line-height: 1;
-  transition:
-    background 150ms ease,
-    color 150ms ease,
-    border-color 150ms ease,
-    transform 150ms ease;
 }
 
 .primary-button {
@@ -411,9 +402,6 @@ textarea {
   justify-content: center;
   border-radius: 0.5rem;
   color: var(--foreground);
-  transition:
-    background 150ms ease,
-    color 150ms ease;
 }
 
 .icon-button:hover:not(:disabled) {
@@ -453,7 +441,6 @@ textarea {
 
 .table-row {
   border-top: 1px solid var(--border);
-  transition: background 120ms ease;
 }
 
 .table-row:first-child {
@@ -706,11 +693,6 @@ textarea {
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease,
-    filter 150ms ease;
 }
 
 .status-menu-trigger:hover {
@@ -735,7 +717,6 @@ textarea {
   padding: 0.55rem 0.65rem;
   text-align: left;
   font-size: 0.825rem;
-  transition: background 120ms ease;
 }
 
 .status-menu-option:hover,

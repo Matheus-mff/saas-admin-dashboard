@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 
-import { getCustomers } from "@/services/customerService";
-import { Customer } from "@/types/customer";
+import {
+  createCustomer,
+  deleteCustomer,
+  getCustomers,
+  updateCustomer,
+} from "@/services/customerService";
+
+import { Customer, CustomerInput } from "@/types/customer";
 
 export function useCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -14,13 +20,34 @@ export function useCustomers() {
       setError("");
 
       const data = await getCustomers();
-
       setCustomers(data);
     } catch {
       setError("Unable to load customers.");
     } finally {
       setLoading(false);
     }
+  }
+
+  async function addCustomer(customer: CustomerInput) {
+    const newCustomer = await createCustomer(customer);
+
+    setCustomers((prev) => [newCustomer, ...prev]);
+  }
+
+  async function editCustomer(id: number, customer: CustomerInput) {
+    const updatedCustomer = await updateCustomer(id, customer);
+
+    setCustomers((prev) =>
+      prev.map((currentCustomer) =>
+        currentCustomer.id === id ? updatedCustomer : currentCustomer
+      )
+    );
+  }
+
+  async function removeCustomer(id: number) {
+    await deleteCustomer(id);
+
+    setCustomers((prev) => prev.filter((customer) => customer.id !== id));
   }
 
   useEffect(() => {
@@ -53,5 +80,8 @@ export function useCustomers() {
     loading,
     error,
     retry: loadCustomers,
+    addCustomer,
+    editCustomer,
+    removeCustomer,
   };
 }

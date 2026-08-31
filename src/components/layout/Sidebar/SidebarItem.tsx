@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+
 import { usePathname } from "next/navigation";
+
 import { LucideIcon } from "lucide-react";
 
 type SidebarItemProps = {
@@ -22,7 +24,7 @@ export default function SidebarItem({ href, label, icon: Icon, isCollapsed }: Si
       aria-current={isActive ? "page" : undefined}
       aria-label={isCollapsed ? label : undefined}
       title={isCollapsed ? label : undefined}
-      className={`flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
+      className={`flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium ${
         isCollapsed ? "md:justify-center md:px-2" : ""
       } ${
         isActive
