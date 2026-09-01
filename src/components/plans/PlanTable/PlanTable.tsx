@@ -12,7 +12,7 @@ export default function PlanTable({ plans, canManage, onEdit }: PlanTableProps) 
   return (
     <div className="table-container">
       <div className="overflow-x-auto">
-        <table className="w-full table-fixed">
+        <table className="w-full min-w-[680px] table-fixed">
           <thead className="table-header">
             <tr>
               <th className={`px-6 py-3 text-left ${canManage ? "w-[35%]" : "w-[40%]"}`}>Plan</th>

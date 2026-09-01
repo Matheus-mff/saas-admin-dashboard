@@ -57,7 +57,7 @@ export default function ConfirmModal({
 
   return (
     <div
-      className="modal-overlay z-[70] flex items-center justify-center p-4"
+      className="modal-overlay z-[70] flex items-center justify-center overflow-y-auto p-3 sm:p-4"
       onClick={handleCancel}
     >
       <div
@@ -65,7 +65,7 @@ export default function ConfirmModal({
         aria-modal="true"
         aria-labelledby="confirm-modal-title"
         aria-describedby="confirm-modal-message"
-        className="modal-panel w-full max-w-md rounded-[14px] p-6"
+        className="modal-panel max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[14px] p-4 sm:max-h-[calc(100dvh-2rem)] sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="confirm-modal-title" className="text-lg font-semibold tracking-[-0.02em]">
@@ -76,12 +76,12 @@ export default function ConfirmModal({
           {message}
         </p>
 
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={handleCancel}
             disabled={isConfirming}
-            className="secondary-button"
+            className="secondary-button w-full sm:w-auto"
           >
             Cancel
           </button>
@@ -90,7 +90,7 @@ export default function ConfirmModal({
             type="button"
             onClick={handleConfirm}
             disabled={isConfirming}
-            className="rounded-lg border border-[var(--danger)] bg-[var(--danger)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-lg border border-[var(--danger)] bg-[var(--danger)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             {isConfirming ? "Deleting..." : "Delete"}
           </button>

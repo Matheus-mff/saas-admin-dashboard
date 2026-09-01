@@ -6,11 +6,10 @@ import { usePathname } from "next/navigation";
 
 import { logout } from "@/app/(app)/actions";
 
-import { UserRole } from "@/constants/userRoles";
-
 import NotificationBell from "@/components/ui/NotificationBell/NotificationBell";
-
 import ThemeToggle from "@/components/ui/ThemeToggle/ThemeToggle";
+
+import { UserRole } from "@/constants/userRoles";
 
 type HeaderProps = {
   onMenuClick: () => void;
@@ -62,37 +61,37 @@ export default function Header({ onMenuClick, user }: HeaderProps) {
   const pageLabel = pageLabels[pathname] ?? "Overview";
 
   return (
-    <header className="navigation-surface sticky top-0 z-30 flex h-[60px] items-center justify-between border-b px-5 sm:px-7 lg:px-9 xl:px-10">
-      <div className="flex items-center gap-3">
+    <header className="navigation-surface sticky top-0 z-30 flex h-[60px] items-center justify-between border-b px-3 sm:px-7 lg:px-9 xl:px-10">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         <button
           type="button"
           onClick={onMenuClick}
-          className="icon-button md:hidden"
+          className="icon-button shrink-0 md:hidden"
           aria-label="Open navigation"
         >
           <PanelLeftOpen size={19} strokeWidth={1.8} />
         </button>
 
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-medium">Workspace</span>
+        <div className="flex min-w-0 items-center gap-2 text-sm">
+          <span className="hidden font-medium sm:inline">Workspace</span>
 
-          <span className="muted-text">/</span>
+          <span className="hidden muted-text sm:inline">/</span>
 
-          <span className="muted-text">{pageLabel}</span>
+          <span className="truncate muted-text">{pageLabel}</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 sm:gap-3">
+      <div className="flex shrink-0 items-center gap-0.5 sm:gap-3">
         <ThemeToggle />
 
         <NotificationBell userKey={user.email} />
 
         <div className="mx-1 hidden h-6 w-px bg-[var(--border)] sm:block" />
 
-        <div className="flex items-center gap-2.5">
+        <div className="hidden items-center gap-2.5 sm:flex">
           <div className="user-avatar">{initials}</div>
 
-          <div className="hidden sm:block">
+          <div>
             <p className="max-w-40 truncate text-sm font-semibold leading-tight">{user.name}</p>
 
             <p className="mt-0.5 text-[11px] muted-text">{roleLabel}</p>

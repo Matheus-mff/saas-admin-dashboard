@@ -6,8 +6,9 @@ type PaginationProps = {
 
 export default function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
   return (
-    <div className="mt-5 flex items-center justify-center gap-1.5">
+    <div className="mt-5 flex flex-wrap items-center justify-center gap-1.5">
       <button
+        type="button"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         className="secondary-button disabled:opacity-40"
@@ -15,23 +16,39 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
         Previous
       </button>
 
-      {Array.from({ length: totalPages }, (_, index) => {
-        const page = index + 1;
-        const isCurrent = currentPage === page;
+      <span className="px-2 text-sm muted-text sm:hidden">
+        Page {currentPage} of {totalPages}
+      </span>
 
-        return (
-          <button
-            key={page}
-            onClick={() => onPageChange(page)}
-            aria-current={isCurrent ? "page" : undefined}
-            className={isCurrent ? "primary-button min-w-10 px-3" : "secondary-button min-w-10 px-3"}
-          >
-            {page}
-          </button>
-        );
-      })}
+      <div className="hidden items-center gap-1.5 sm:flex">
+        {Array.from(
+          {
+            length: totalPages,
+          },
+          (_, index) => {
+            const page = index + 1;
+
+            const isCurrent = currentPage === page;
+
+            return (
+              <button
+                type="button"
+                key={page}
+                onClick={() => onPageChange(page)}
+                aria-current={isCurrent ? "page" : undefined}
+                className={
+                  isCurrent ? "primary-button min-w-10 px-3" : "secondary-button min-w-10 px-3"
+                }
+              >
+                {page}
+              </button>
+            );
+          }
+        )}
+      </div>
 
       <button
+        type="button"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         className="secondary-button disabled:opacity-40"

@@ -1,6 +1,7 @@
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 import SidebarItem from "./SidebarItem";
+
 import { navigation } from "@/lib/navigation";
 
 type SidebarProps = {
@@ -10,16 +11,12 @@ type SidebarProps = {
   onToggleCollapse: () => void;
 };
 
-export default function Sidebar({
-  isOpen,
-  isCollapsed,
-  onClose,
-  onToggleCollapse,
-}: SidebarProps) {
+export default function Sidebar({ isOpen, isCollapsed, onClose, onToggleCollapse }: SidebarProps) {
   return (
     <>
       {isOpen && (
         <button
+          type="button"
           onClick={onClose}
           className="fixed inset-0 z-40 bg-black/55 md:hidden"
           aria-label="Close navigation"
@@ -27,13 +24,13 @@ export default function Sidebar({
       )}
 
       <aside
-        className={`navigation-surface fixed inset-y-0 left-0 z-50 flex w-64 flex-col overflow-hidden border-r transition-[transform,width] duration-300 md:translate-x-0 ${
+        className={`navigation-surface fixed inset-y-0 left-0 z-50 flex w-64 max-w-[calc(100vw-2rem)] flex-col overflow-hidden border-r transition-[transform,width] duration-300 md:max-w-none md:translate-x-0 ${
           isCollapsed ? "md:w-20" : "md:w-64"
         } ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div
           className={`flex h-[60px] items-center justify-between border-b ${
-            isCollapsed ? "px-2" : "px-5"
+            isCollapsed ? "px-5 md:px-2" : "px-5"
           }`}
         >
           <div className={`flex items-center gap-3 ${isCollapsed ? "md:gap-0" : ""}`}>
@@ -87,7 +84,6 @@ export default function Sidebar({
             ))}
           </ul>
         </nav>
-
       </aside>
     </>
   );

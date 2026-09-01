@@ -14,6 +14,7 @@ type AppShellProps = {
 
 export default function AppShell({ children, user }: AppShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
@@ -33,7 +34,9 @@ export default function AppShell({ children, user }: AppShellProps) {
         >
           <Header user={user} onMenuClick={() => setIsSidebarOpen(true)} />
 
-          <main className="mx-auto w-full max-w-[1720px] p-5 sm:p-7 lg:p-9 xl:p-10">{children}</main>
+          <main className="mx-auto w-full max-w-[1720px] p-4 sm:p-7 lg:p-9 xl:p-10">
+            {children}
+          </main>
         </div>
       </div>
     </CurrentUserProvider>
