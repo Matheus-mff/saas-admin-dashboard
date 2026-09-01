@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { requireAuthenticatedUser } from "@/lib/apiAuth";
+
 import { prisma } from "@/lib/prisma";
 
 import { Notification } from "@/types/notification";
-
-const MAX_NOTIFICATIONS = 8;
 
 function formatCurrency(value: number) {
   return `$${value.toLocaleString("en-US", {
@@ -119,31 +118,43 @@ export async function GET() {
 
     const failedPaymentNotifications: Notification[] = failedTransactions.map((transaction) => ({
       id: `failed-payment-${transaction.id}`,
+
       type: "failed-payment",
+
       title: "Payment failed",
+
       message: `${formatCurrency(transaction.amount)} payment from ${
         transaction.subscription.customer.name
       } for the ${transaction.subscription.plan.name} plan failed.`,
+
       href: "/transactions",
     }));
 
     const pendingPaymentNotifications: Notification[] = pendingTransactions.map((transaction) => ({
       id: `pending-payment-${transaction.id}`,
+
       type: "pending-payment",
+
       title: "Payment pending",
+
       message: `${formatCurrency(transaction.amount)} payment from ${
         transaction.subscription.customer.name
       } for the ${transaction.subscription.plan.name} plan is pending.`,
+
       href: "/transactions",
     }));
 
     const trialNotifications: Notification[] = trialSubscriptions.map((subscription) => ({
       id: `trial-subscription-${subscription.id}`,
+
       type: "trial-subscription",
+
       title: "Trial subscription",
+
       message: `${subscription.customer.name} is currently trialing the ${
         subscription.plan.name
       } plan.`,
+
       href: "/subscriptions",
     }));
 
@@ -154,7 +165,7 @@ export async function GET() {
     ];
 
     return NextResponse.json({
-      notifications: allNotifications.slice(0, MAX_NOTIFICATIONS),
+      notifications: allNotifications,
 
       total: allNotifications.length,
     });

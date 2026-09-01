@@ -1,6 +1,7 @@
 "use client";
 
 import { LogOut, PanelLeftOpen } from "lucide-react";
+
 import { usePathname } from "next/navigation";
 
 import { logout } from "@/app/(app)/actions";
@@ -8,6 +9,7 @@ import { logout } from "@/app/(app)/actions";
 import { UserRole } from "@/constants/userRoles";
 
 import NotificationBell from "@/components/ui/NotificationBell/NotificationBell";
+
 import ThemeToggle from "@/components/ui/ThemeToggle/ThemeToggle";
 
 type HeaderProps = {
@@ -52,9 +54,11 @@ function getInitials(name: string) {
 
 export default function Header({ onMenuClick, user }: HeaderProps) {
   const pathname = usePathname();
+
   const initials = getInitials(user.name);
 
   const roleLabel = roleLabels[user.role];
+
   const pageLabel = pageLabels[pathname] ?? "Overview";
 
   return (
@@ -71,7 +75,9 @@ export default function Header({ onMenuClick, user }: HeaderProps) {
 
         <div className="flex items-center gap-2 text-sm">
           <span className="font-medium">Workspace</span>
+
           <span className="muted-text">/</span>
+
           <span className="muted-text">{pageLabel}</span>
         </div>
       </div>
@@ -79,14 +85,12 @@ export default function Header({ onMenuClick, user }: HeaderProps) {
       <div className="flex items-center gap-1.5 sm:gap-3">
         <ThemeToggle />
 
-        <NotificationBell />
+        <NotificationBell userKey={user.email} />
 
         <div className="mx-1 hidden h-6 w-px bg-[var(--border)] sm:block" />
 
         <div className="flex items-center gap-2.5">
-          <div className="user-avatar">
-            {initials}
-          </div>
+          <div className="user-avatar">{initials}</div>
 
           <div className="hidden sm:block">
             <p className="max-w-40 truncate text-sm font-semibold leading-tight">{user.name}</p>

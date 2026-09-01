@@ -12,6 +12,10 @@ import { Notification, NotificationType } from "@/types/notification";
 
 import { DASHBOARD_DATA_CHANGED } from "@/utils/dashboardEvents";
 
+type NotificationBellProps = {
+  userKey: string;
+};
+
 function getNotificationIcon(type: NotificationType) {
   if (type === "failed-payment") {
     return <AlertTriangle size={17} strokeWidth={1.8} className="text-[var(--danger)]" />;
@@ -24,14 +28,50 @@ function getNotificationIcon(type: NotificationType) {
   return <CreditCard size={17} strokeWidth={1.8} className="muted-text" />;
 }
 
-export default function NotificationBell() {
+function getSeenNotificationsStorageKey(userKey: string) {
+  return `seen-notifications:${userKey.trim().toLowerCase()}`;
+}
+
+function readSeenNotificationIds(storageKey: string) {
+  try {
+    const storedValue = localStorage.getItem(storageKey);
+
+    if (!storedValue) {
+      return [];
+    }
+
+    const parsedValue = JSON.parse(storedValue);
+
+    if (!Array.isArray(parsedValue)) {
+      return [];
+    }
+
+    return parsedValue.filter((value): value is string => typeof value === "string");
+  } catch {
+    return [];
+  }
+}
+
+function saveSeenNotificationIds(storageKey: string, ids: string[]) {
+  localStorage.setItem(storageKey, JSON.stringify(ids));
+}
+
+export default function NotificationBell({ userKey }: NotificationBellProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const [seenNotificationIds, setSeenNotificationIds] = useState<string[]>([]);
+
   const [total, setTotal] = useState(0);
+
   const [isOpen, setIsOpen] = useState(false);
+
   const [isLoading, setIsLoading] = useState(true);
+
   const [errorMessage, setErrorMessage] = useState("");
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const storageKey = getSeenNotificationsStorageKey(userKey);
 
   useEffect(() => {
     async function loadNotifications() {
@@ -40,7 +80,21 @@ export default function NotificationBell() {
 
         const data = await getNotifications();
 
+        const activeNotificationIds = data.notifications.map((notification) => notification.id);
+
+        const activeNotificationIdSet = new Set(activeNotificationIds);
+
+        const storedSeenIds = readSeenNotificationIds(storageKey);
+
+        const stillActiveSeenIds = storedSeenIds.filter((id) => activeNotificationIdSet.has(id));
+
+        if (stillActiveSeenIds.length !== storedSeenIds.length) {
+          saveSeenNotificationIds(storageKey, stillActiveSeenIds);
+        }
+
         setNotifications(data.notifications);
+
+        setSeenNotificationIds(stillActiveSeenIds);
 
         setTotal(data.total);
       } catch (error) {
@@ -61,7 +115,7 @@ export default function NotificationBell() {
 
       window.removeEventListener("focus", loadNotifications);
     };
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     function handlePointerDown(e: PointerEvent) {
@@ -87,7 +141,41 @@ export default function NotificationBell() {
     };
   }, []);
 
-  const badgeText = total > 99 ? "99+" : total.toString();
+  const seenNotificationIdSet = new Set(seenNotificationIds);
+
+  const unseenCount = notifications.filter(
+    (notification) => !seenNotificationIdSet.has(notification.id)
+  ).length;
+
+  const hasActiveAlerts = total > 0;
+
+  const hasSeenActiveAlerts = hasActiveAlerts && unseenCount === 0;
+
+  const badgeText = unseenCount > 99 ? "99+" : unseenCount.toString();
+
+  function markCurrentNotificationsAsSeen() {
+    if (notifications.length === 0) {
+      return;
+    }
+
+    const currentNotificationIds = notifications.map((notification) => notification.id);
+
+    const nextSeenIds = Array.from(new Set([...seenNotificationIds, ...currentNotificationIds]));
+
+    setSeenNotificationIds(nextSeenIds);
+
+    saveSeenNotificationIds(storageKey, nextSeenIds);
+  }
+
+  function handleBellClick() {
+    const willOpen = !isOpen;
+
+    setIsOpen(willOpen);
+
+    if (willOpen) {
+      markCurrentNotificationsAsSeen();
+    }
+  }
 
   return (
     <div ref={containerRef} className="relative">
@@ -95,18 +183,31 @@ export default function NotificationBell() {
         type="button"
         className="icon-button relative"
         aria-label={
-          total > 0 ? `Open notifications. ${total} active alerts.` : "Open notifications"
+          unseenCount > 0
+            ? `Open notifications. ${unseenCount} unseen ${unseenCount === 1 ? "alert" : "alerts"}.`
+            : total > 0
+              ? `Open notifications. ${total} active ${
+                  total === 1 ? "alert" : "alerts"
+                }, no unseen alerts.`
+              : "Open notifications"
         }
         aria-expanded={isOpen}
         aria-haspopup="dialog"
-        onClick={() => setIsOpen((current) => !current)}
+        onClick={handleBellClick}
       >
         <Bell size={18} strokeWidth={1.8} />
 
-        {total > 0 && (
+        {unseenCount > 0 && (
           <span className="absolute -right-1 -top-1 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[var(--danger)] px-1 text-[10px] font-bold leading-none text-white">
             {badgeText}
           </span>
+        )}
+
+        {hasSeenActiveAlerts && (
+          <span
+            className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-[var(--warning)]"
+            aria-hidden="true"
+          />
         )}
       </button>
 
@@ -158,7 +259,7 @@ export default function NotificationBell() {
                   key={notification.id}
                   href={notification.href}
                   onClick={() => setIsOpen(false)}
-                  className="flex gap-3 border-b px-4 py-3.5 transition-colors last:border-b-0 hover:bg-[var(--hover)]"
+                  className="flex gap-3 border-b px-4 py-3.5 last:border-b-0 hover:bg-[var(--hover)]"
                 >
                   <div className="mt-0.5 shrink-0">{getNotificationIcon(notification.type)}</div>
 
@@ -173,15 +274,7 @@ export default function NotificationBell() {
 
           {!isLoading && !errorMessage && total > 0 && (
             <div className="border-t px-4 py-3 text-center text-xs muted-text">
-              {total > notifications.length && (
-                <p>
-                  Showing the first {notifications.length} of {total} alerts.
-                </p>
-              )}
-
-              <p className={total > notifications.length ? "mt-1" : ""}>
-                Alerts stay active until the related status changes.
-              </p>
+              Alerts stay active until the related status changes.
             </div>
           )}
         </div>
